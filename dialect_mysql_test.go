@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 //go:build !integration
-// +build !integration
 
 package gorp_test
 
@@ -41,7 +40,7 @@ func TestMySQLDialect(t *testing.T) {
 	o.Group("ToSqlType", func() {
 		tests := []struct {
 			name     string
-			value    interface{}
+			value    any
 			maxSize  int
 			autoIncr bool
 			expected string
@@ -52,7 +51,7 @@ func TestMySQLDialect(t *testing.T) {
 			{"int16", int16(1), 0, false, "smallint"},
 			{"uint16", uint16(1), 0, false, "smallint unsigned"},
 			{"int32", int32(1), 0, false, "int"},
-			{"int (treated as int32)", int(1), 0, false, "int"},
+			{"int (treated as int32)", 1, 0, false, "int"},
 			{"uint32", uint32(1), 0, false, "int unsigned"},
 			{"uint (treated as uint32)", uint(1), 0, false, "int unsigned"},
 			{"int64", int64(1), 0, false, "bigint"},
@@ -163,14 +162,14 @@ func TestMySQLDialect(t *testing.T) {
 	})
 }
 
-type panicMatcher struct {
+type PanicMatcher struct {
 }
 
-func Panic() panicMatcher {
-	return panicMatcher{}
+func Panic() PanicMatcher {
+	return PanicMatcher{}
 }
 
-func (m panicMatcher) Match(actual interface{}) (resultValue interface{}, err error) {
+func (m PanicMatcher) Match(actual any) (resultValue any, err error) {
 	switch f := actual.(type) {
 	case func():
 		panicked := false

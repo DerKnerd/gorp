@@ -17,7 +17,7 @@ type OptimisticLockError struct {
 	TableName string
 
 	// Primary key values of the row being updated/deleted
-	Keys []interface{}
+	Keys []any
 
 	// true if a row was found with those keys, indicating the
 	// LocalVersion is stale.  false if no value was found with those
@@ -41,7 +41,7 @@ func (e OptimisticLockError) Error() string {
 
 func lockError(m *DbMap, exec SqlExecutor, tableName string,
 	existingVer int64, elem reflect.Value,
-	keys ...interface{}) (int64, error) {
+	keys ...any) (int64, error) {
 
 	existing, err := get(m, exec, elem.Interface(), keys...)
 	if err != nil {

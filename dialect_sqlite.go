@@ -17,7 +17,7 @@ func (d SqliteDialect) QuerySuffix() string { return ";" }
 
 func (d SqliteDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool) string {
 	switch val.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return d.ToSqlType(val.Elem(), maxsize, isAutoIncr)
 	case reflect.Bool:
 		return "integer"
@@ -48,7 +48,7 @@ func (d SqliteDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool)
 	return fmt.Sprintf("varchar(%d)", maxsize)
 }
 
-// Returns autoincrement
+// AutoIncrStr Returns autoincrement
 func (d SqliteDialect) AutoIncrStr() string {
 	return "autoincrement"
 }
@@ -57,11 +57,11 @@ func (d SqliteDialect) AutoIncrBindValue() string {
 	return "null"
 }
 
-func (d SqliteDialect) AutoIncrInsertSuffix(col *ColumnMap) string {
+func (d SqliteDialect) AutoIncrInsertSuffix(_ *ColumnMap) string {
 	return ""
 }
 
-// Returns suffix
+// CreateTableSuffix Returns suffix
 func (d SqliteDialect) CreateTableSuffix() string {
 	return d.suffix
 }
@@ -74,19 +74,19 @@ func (d SqliteDialect) DropIndexSuffix() string {
 	return ""
 }
 
-// With sqlite, there technically isn't a TRUNCATE statement,
+// TruncateClause With sqlite, there technically isn't a TRUNCATE statement,
 // but a DELETE FROM uses a truncate optimization:
 // http://www.sqlite.org/lang_delete.html
 func (d SqliteDialect) TruncateClause() string {
 	return "delete from"
 }
 
-// Returns "?"
-func (d SqliteDialect) BindVar(i int) string {
+// BindVar Returns "?"
+func (d SqliteDialect) BindVar(_ int) string {
 	return "?"
 }
 
-func (d SqliteDialect) InsertAutoIncr(exec SqlExecutor, insertSql string, params ...interface{}) (int64, error) {
+func (d SqliteDialect) InsertAutoIncr(exec SqlExecutor, insertSql string, params ...any) (int64, error) {
 	return standardInsertAutoIncr(exec, insertSql, params...)
 }
 
@@ -94,19 +94,19 @@ func (d SqliteDialect) QuoteField(f string) string {
 	return `"` + f + `"`
 }
 
-// sqlite does not have schemas like PostgreSQL does, so just escape it like normal
-func (d SqliteDialect) QuotedTableForQuery(schema string, table string) string {
+// QuotedTableForQuery sqlite does not have schemas like PostgreSQL does, so just escape it like normal
+func (d SqliteDialect) QuotedTableForQuery(_ string, table string) string {
 	return d.QuoteField(table)
 }
 
-func (d SqliteDialect) IfSchemaNotExists(command, schema string) string {
+func (d SqliteDialect) IfSchemaNotExists(command, _ string) string {
 	return fmt.Sprintf("%s if not exists", command)
 }
 
-func (d SqliteDialect) IfTableExists(command, schema, table string) string {
+func (d SqliteDialect) IfTableExists(command, _, _ string) string {
 	return fmt.Sprintf("%s if exists", command)
 }
 
-func (d SqliteDialect) IfTableNotExists(command, schema, table string) string {
+func (d SqliteDialect) IfTableNotExists(command, _, _ string) string {
 	return fmt.Sprintf("%s if not exists", command)
 }

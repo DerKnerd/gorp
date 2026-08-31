@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// Implementation of Dialect for Oracle databases.
+// OracleDialect Implementation of Dialect for Oracle databases.
 type OracleDialect struct{}
 
 func (d OracleDialect) QuerySuffix() string { return "" }
@@ -21,7 +21,7 @@ func (d OracleDialect) DropIndexSuffix() string { return "" }
 
 func (d OracleDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool) string {
 	switch val.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return d.ToSqlType(val.Elem(), maxsize, isAutoIncr)
 	case reflect.Bool:
 		return "boolean"
@@ -58,13 +58,13 @@ func (d OracleDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool)
 
 	if maxsize > 0 {
 		return fmt.Sprintf("varchar(%d)", maxsize)
-	} else {
-		return "text"
 	}
+
+	return "text"
 
 }
 
-// Returns empty string
+// AutoIncrStr Returns empty string
 func (d OracleDialect) AutoIncrStr() string {
 	return ""
 }
@@ -73,11 +73,11 @@ func (d OracleDialect) AutoIncrBindValue() string {
 	return "NULL"
 }
 
-func (d OracleDialect) AutoIncrInsertSuffix(col *ColumnMap) string {
+func (d OracleDialect) AutoIncrInsertSuffix(_ *ColumnMap) string {
 	return ""
 }
 
-// Returns suffix
+// CreateTableSuffix Returns suffix
 func (d OracleDialect) CreateTableSuffix() string {
 	return ""
 }
@@ -86,13 +86,13 @@ func (d OracleDialect) TruncateClause() string {
 	return "truncate"
 }
 
-// Returns "$(i+1)"
+// BindVar Returns "$(i+1)"
 func (d OracleDialect) BindVar(i int) string {
 	return fmt.Sprintf(":%d", i+1)
 }
 
-// After executing the insert uses the ColMap IdQuery to get the generated id
-func (d OracleDialect) InsertQueryToTarget(exec SqlExecutor, insertSql, idSql string, target interface{}, params ...interface{}) error {
+// InsertQueryToTarget After executing the insert uses the ColMap IdQuery to get the generated id
+func (d OracleDialect) InsertQueryToTarget(exec SqlExecutor, insertSql, idSql string, target any, params ...any) error {
 	_, err := exec.Exec(insertSql, params...)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func (d OracleDialect) InsertQueryToTarget(exec SqlExecutor, insertSql, idSql st
 	case int:
 		*(target.(*int)) = int(id)
 	default:
-		return fmt.Errorf("Id field can be int, int32 or int64")
+		return fmt.Errorf("id field can be int, int32 or int64")
 	}
 	return nil
 }
@@ -126,14 +126,14 @@ func (d OracleDialect) QuotedTableForQuery(schema string, table string) string {
 	return schema + "." + d.QuoteField(table)
 }
 
-func (d OracleDialect) IfSchemaNotExists(command, schema string) string {
+func (d OracleDialect) IfSchemaNotExists(command, _ string) string {
 	return fmt.Sprintf("%s if not exists", command)
 }
 
-func (d OracleDialect) IfTableExists(command, schema, table string) string {
+func (d OracleDialect) IfTableExists(command, _, _ string) string {
 	return fmt.Sprintf("%s if exists", command)
 }
 
-func (d OracleDialect) IfTableNotExists(command, schema, table string) string {
+func (d OracleDialect) IfTableNotExists(command, _, _ string) string {
 	return fmt.Sprintf("%s if not exists", command)
 }

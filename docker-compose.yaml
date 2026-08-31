@@ -1,0 +1,27 @@
+services:
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: gorptest
+      MYSQL_USER: gorptest
+      MYSQL_PASSWORD: gorptest
+      MYSQL_ROOT_PASSWORD: gorptest
+    ports:
+      - "3306:3306"
+  postgres:
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: gorptest
+      POSTGRES_USER: gorptest
+      POSTGRES_PASSWORD: gorptest
+    ports:
+      - "5432:5432"
+  mariadb:
+    image: mariadb:latest
+    environment:
+      MARIADB_DATABASE: gorptest
+      MARIADB_USER: gorptest
+      MARIADB_PASSWORD: gorptest
+      MARIADB_ROOT_PASSWORD: gorptest
+    ports:
+      - "3307:3306"

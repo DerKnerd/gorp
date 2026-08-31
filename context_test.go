@@ -9,6 +9,7 @@ package gorp_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 )
 
 // Drivers that don't support cancellation.
-var unsupportedDrivers map[string]bool = map[string]bool{
+var unsupportedDrivers = map[string]bool{
 	"mymysql": true,
 }
 
@@ -65,15 +66,7 @@ func TestWithCanceledContext(t *testing.T) {
 		t.Errorf("too long execution time: %s", d)
 	}
 
-	switch driver {
-	case "postgres":
-		// pq doesn't return standard deadline exceeded error
-		if err.Error() != "pq: canceling statement due to user request" {
-			t.Errorf("expected context.DeadlineExceeded, got %v", err)
-		}
-	default:
-		if err != context.DeadlineExceeded {
-			t.Errorf("expected context.DeadlineExceeded, got %v", err)
-		}
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("expected context.DeadlineExceeded, got %v", err)
 	}
 }

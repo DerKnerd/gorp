@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Implementation of Dialect for MySQL databases.
+// MySQLDialect Implementation of Dialect for MySQL databases.
 type MySQLDialect struct {
 
 	// Engine is the storage engine to use "InnoDB" vs "MyISAM" for example
@@ -25,7 +25,7 @@ func (d MySQLDialect) QuerySuffix() string { return ";" }
 
 func (d MySQLDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool) string {
 	switch val.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return d.ToSqlType(val.Elem(), maxsize, isAutoIncr)
 	case reflect.Bool:
 		return "boolean"
@@ -80,12 +80,12 @@ func (d MySQLDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool) 
 	 */
 	if maxsize < 256 {
 		return fmt.Sprintf("varchar(%d)", maxsize)
-	} else {
-		return "text"
 	}
+
+	return "text"
 }
 
-// Returns auto_increment
+// AutoIncrStr Returns auto_increment
 func (d MySQLDialect) AutoIncrStr() string {
 	return "auto_increment"
 }
@@ -94,11 +94,11 @@ func (d MySQLDialect) AutoIncrBindValue() string {
 	return "null"
 }
 
-func (d MySQLDialect) AutoIncrInsertSuffix(col *ColumnMap) string {
+func (d MySQLDialect) AutoIncrInsertSuffix(_ *ColumnMap) string {
 	return ""
 }
 
-// Returns engine=%s charset=%s  based on values stored on struct
+// CreateTableSuffix Returns engine=%s charset=%s  based on values stored on struct
 func (d MySQLDialect) CreateTableSuffix() string {
 	if d.Engine == "" || d.Encoding == "" {
 		msg := "gorp - undefined"
@@ -135,12 +135,12 @@ func (d MySQLDialect) SleepClause(s time.Duration) string {
 	return fmt.Sprintf("sleep(%f)", s.Seconds())
 }
 
-// Returns "?"
-func (d MySQLDialect) BindVar(i int) string {
+// BindVar Returns "?"
+func (d MySQLDialect) BindVar(_ int) string {
 	return "?"
 }
 
-func (d MySQLDialect) InsertAutoIncr(exec SqlExecutor, insertSql string, params ...interface{}) (int64, error) {
+func (d MySQLDialect) InsertAutoIncr(exec SqlExecutor, insertSql string, params ...any) (int64, error) {
 	return standardInsertAutoIncr(exec, insertSql, params...)
 }
 
@@ -156,14 +156,14 @@ func (d MySQLDialect) QuotedTableForQuery(schema string, table string) string {
 	return schema + "." + d.QuoteField(table)
 }
 
-func (d MySQLDialect) IfSchemaNotExists(command, schema string) string {
+func (d MySQLDialect) IfSchemaNotExists(command, _ string) string {
 	return fmt.Sprintf("%s if not exists", command)
 }
 
-func (d MySQLDialect) IfTableExists(command, schema, table string) string {
+func (d MySQLDialect) IfTableExists(command, _, _ string) string {
 	return fmt.Sprintf("%s if exists", command)
 }
 
-func (d MySQLDialect) IfTableNotExists(command, schema, table string) string {
+func (d MySQLDialect) IfTableNotExists(command, _, _ string) string {
 	return fmt.Sprintf("%s if not exists", command)
 }

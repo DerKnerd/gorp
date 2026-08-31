@@ -20,7 +20,7 @@ func (d PostgresDialect) QuerySuffix() string { return ";" }
 
 func (d PostgresDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool) string {
 	switch val.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return d.ToSqlType(val.Elem(), maxsize, isAutoIncr)
 	case reflect.Bool:
 		return "boolean"
@@ -57,13 +57,13 @@ func (d PostgresDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr boo
 
 	if maxsize > 0 {
 		return fmt.Sprintf("varchar(%d)", maxsize)
-	} else {
-		return "text"
 	}
+
+	return "text"
 
 }
 
-// Returns empty string
+// AutoIncrStr Returns empty string
 func (d PostgresDialect) AutoIncrStr() string {
 	return ""
 }
@@ -76,7 +76,7 @@ func (d PostgresDialect) AutoIncrInsertSuffix(col *ColumnMap) string {
 	return " returning " + d.QuoteField(col.ColumnName)
 }
 
-// Returns suffix
+// CreateTableSuffix Returns suffix
 func (d PostgresDialect) CreateTableSuffix() string {
 	return d.suffix
 }
@@ -97,12 +97,12 @@ func (d PostgresDialect) SleepClause(s time.Duration) string {
 	return fmt.Sprintf("pg_sleep(%f)", s.Seconds())
 }
 
-// Returns "$(i+1)"
+// BindVar Returns "$(i+1)"
 func (d PostgresDialect) BindVar(i int) string {
 	return fmt.Sprintf("$%d", i+1)
 }
 
-func (d PostgresDialect) InsertAutoIncrToTarget(exec SqlExecutor, insertSql string, target interface{}, params ...interface{}) error {
+func (d PostgresDialect) InsertAutoIncrToTarget(exec SqlExecutor, insertSql string, target any, params ...any) error {
 	rows, err := exec.Query(insertSql, params...)
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (d PostgresDialect) InsertAutoIncrToTarget(exec SqlExecutor, insertSql stri
 	defer rows.Close()
 
 	if !rows.Next() {
-		return fmt.Errorf("No serial value returned for insert: %s Encountered error: %s", insertSql, rows.Err())
+		return fmt.Errorf("no serial value returned for insert: %s Encountered error: %s", insertSql, rows.Err())
 	}
 	if err := rows.Scan(target); err != nil {
 		return err
@@ -136,14 +136,14 @@ func (d PostgresDialect) QuotedTableForQuery(schema string, table string) string
 	return schema + "." + d.QuoteField(table)
 }
 
-func (d PostgresDialect) IfSchemaNotExists(command, schema string) string {
+func (d PostgresDialect) IfSchemaNotExists(command, _ string) string {
 	return fmt.Sprintf("%s if not exists", command)
 }
 
-func (d PostgresDialect) IfTableExists(command, schema, table string) string {
+func (d PostgresDialect) IfTableExists(command, _, _ string) string {
 	return fmt.Sprintf("%s if exists", command)
 }
 
-func (d PostgresDialect) IfTableNotExists(command, schema, table string) string {
+func (d PostgresDialect) IfTableNotExists(command, _, _ string) string {
 	return fmt.Sprintf("%s if not exists", command)
 }

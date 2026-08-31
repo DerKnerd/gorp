@@ -476,7 +476,7 @@ You may use a map or struct to bind parameters by name.  This is currently
 only supported in SELECT queries.
 
 ```go
-_, err := dbm.Select(&dest, "select * from Foo where name = :name and age = :age", map[string]interface{}{
+_, err := dbm.Select(&dest, "select * from Foo where name = :name and age = :age", map[string]any{
   "name": "Rob",
   "age": 31,
 })
@@ -746,7 +746,7 @@ around this.  The following is portable:
 
 ```go 
 err := dbmap.SelectOne(&val, "select * from foo where id = :id",
-map[string]interface{} { "id": 30})
+map[string]any { "id": 30})
 ```
 
 Additionally, when using Postgres as your database, you should utilize

@@ -12,7 +12,7 @@ import (
 // SQL databases.  At present the Dialect is only used by CreateTables()
 // but this could change in the future
 type Dialect interface {
-	// adds a suffix to any query, usually ";"
+	// QuerySuffix adds a suffix to any query, usually ";"
 	QuerySuffix() string
 
 	// ToSqlType returns the SQL column type to use when creating a
@@ -21,47 +21,47 @@ type Dialect interface {
 	// or LONGBLOB depending on the maxsize
 	ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool) string
 
-	// string to append to primary key column definitions
+	// AutoIncrStr string to append to primary key column definitions
 	AutoIncrStr() string
 
-	// string to bind autoincrement columns to. Empty string will
+	// AutoIncrBindValue string to bind autoincrement columns to. Empty string will
 	// remove reference to those columns in the INSERT statement.
 	AutoIncrBindValue() string
 
 	AutoIncrInsertSuffix(col *ColumnMap) string
 
-	// string to append to "create table" statement for vendor specific
+	// CreateTableSuffix string to append to "create table" statement for vendor specific
 	// table attributes
 	CreateTableSuffix() string
 
-	// string to append to "create index" statement
+	// CreateIndexSuffix string to append to "create index" statement
 	CreateIndexSuffix() string
 
-	// string to append to "drop index" statement
+	// DropIndexSuffix string to append to "drop index" statement
 	DropIndexSuffix() string
 
-	// string to truncate tables
+	// TruncateClause string to truncate tables
 	TruncateClause() string
 
-	// bind variable string to use when forming SQL statements
+	// BindVar bind variable string to use when forming SQL statements
 	// in many dbs it is "?", but Postgres appears to use $1
 	//
 	// i is a zero based index of the bind variable in this statement
 	//
 	BindVar(i int) string
 
-	// Handles quoting of a field name to ensure that it doesn't raise any
+	// QuoteField Handles quoting of a field name to ensure that it doesn't raise any
 	// SQL parsing exceptions by using a reserved word as a field name.
 	QuoteField(field string) string
 
-	// Handles building up of a schema.database string that is compatible with
+	// QuotedTableForQuery Handles building up of a schema.database string that is compatible with
 	// the given dialect
 	//
 	// schema - The schema that <table> lives in
 	// table - The table name
 	QuotedTableForQuery(schema string, table string) string
 
-	// Existence clause for table creation / deletion
+	// IfSchemaNotExists Existence clause for table creation / deletion
 	IfSchemaNotExists(command, schema string) string
 	IfTableExists(command, schema, table string) string
 	IfTableNotExists(command, schema, table string) string
@@ -72,7 +72,7 @@ type Dialect interface {
 // the dialect can handle automatic assignment of more than just
 // integers, see TargetedAutoIncrInserter.
 type IntegerAutoIncrInserter interface {
-	InsertAutoIncr(exec SqlExecutor, insertSql string, params ...interface{}) (int64, error)
+	InsertAutoIncr(exec SqlExecutor, insertSql string, params ...any) (int64, error)
 }
 
 // TargetedAutoIncrInserter is implemented by dialects that can
@@ -83,20 +83,20 @@ type TargetedAutoIncrInserter interface {
 	// automatically generated primary key directly to the passed in
 	// target.  The target should be a pointer to the primary key
 	// field of the value being inserted.
-	InsertAutoIncrToTarget(exec SqlExecutor, insertSql string, target interface{}, params ...interface{}) error
+	InsertAutoIncrToTarget(exec SqlExecutor, insertSql string, target any, params ...any) error
 }
 
 // TargetQueryInserter is implemented by dialects that can perform
 // assignment of integer primary key type by executing a query
 // like "select sequence.currval from dual".
 type TargetQueryInserter interface {
-	// TargetQueryInserter runs an insert operation and assigns the
+	// InsertQueryToTarget TargetQueryInserter runs an insert operation and assigns the
 	// automatically generated primary key retrived by the query
 	// extracted from the GeneratedIdQuery field of the id column.
-	InsertQueryToTarget(exec SqlExecutor, insertSql, idSql string, target interface{}, params ...interface{}) error
+	InsertQueryToTarget(exec SqlExecutor, insertSql, idSql string, target any, params ...any) error
 }
 
-func standardInsertAutoIncr(exec SqlExecutor, insertSql string, params ...interface{}) (int64, error) {
+func standardInsertAutoIncr(exec SqlExecutor, insertSql string, params ...any) (int64, error) {
 	res, err := exec.Exec(insertSql, params...)
 	if err != nil {
 		return 0, err

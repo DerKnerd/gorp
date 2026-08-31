@@ -7,8 +7,8 @@ echo "Running unit tests"
 go test -race
 
 echo "Testing against postgres"
-export GORP_TEST_DSN="host=postgres user=gorptest password=gorptest dbname=gorptest sslmode=disable"
-export GORP_TEST_DIALECT=postgres
+export GORP_TEST_DSN="postgres://gorptest:gorptest@postgres:5432/gorptest?sslmode=disable"
+export GORP_TEST_DIALECT=pgx
 go test -tags integration $GOBUILDFLAG $@ .
 
 echo "Testing against sqlite"

@@ -16,26 +16,26 @@ type CustomScanner struct {
 	// After a row is scanned, Holder will contain the value from the database column.
 	// Initialize the CustomScanner with the concrete Go type you wish the database
 	// driver to scan the raw column into.
-	Holder interface{}
+	Holder any
 	// Target typically holds a pointer to the target struct field to bind the Holder
 	// value to.
-	Target interface{}
+	Target any
 	// Binder is a custom function that converts the holder value to the target type
 	// and sets target accordingly.  This function should return error if a problem
 	// occurs converting the holder to the target.
-	Binder func(holder interface{}, target interface{}) error
+	Binder func(holder any, target any) error
 }
 
-// Used to filter columns when selectively updating
+// ColumnFilter Used to filter columns when selectively updating
 type ColumnFilter func(*ColumnMap) bool
 
-func acceptAllFilter(col *ColumnMap) bool {
+func acceptAllFilter(_ *ColumnMap) bool {
 	return true
 }
 
 // Bind is called automatically by gorp after Scan()
-func (me CustomScanner) Bind() error {
-	return me.Binder(me.Holder, me.Target)
+func (customScanner CustomScanner) Bind() error {
+	return customScanner.Binder(customScanner.Holder, customScanner.Target)
 }
 
 type bindPlan struct {
@@ -62,7 +62,7 @@ func (plan *bindPlan) createBindInstance(elem reflect.Value, conv TypeConverter)
 			newVer := bi.existingVersion + 1
 			bi.args = append(bi.args, newVer)
 			if bi.existingVersion == 0 {
-				elem.FieldByName(plan.versField).SetInt(int64(newVer))
+				elem.FieldByName(plan.versField).SetInt(newVer)
 			}
 		} else {
 			val := elem.FieldByName(k).Interface()
@@ -93,8 +93,8 @@ func (plan *bindPlan) createBindInstance(elem reflect.Value, conv TypeConverter)
 
 type bindInstance struct {
 	query             string
-	args              []interface{}
-	keys              []interface{}
+	args              []any
+	keys              []any
 	existingVersion   int64
 	versField         string
 	autoIncrIdx       int

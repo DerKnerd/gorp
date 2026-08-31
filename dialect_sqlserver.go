@@ -22,7 +22,7 @@ type SqlServerDialect struct {
 
 func (d SqlServerDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool) string {
 	switch val.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return d.ToSqlType(val.Elem(), maxsize, isAutoIncr)
 	case reflect.Bool:
 		return "bit"
@@ -76,17 +76,17 @@ func (d SqlServerDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bo
 	return fmt.Sprintf("nvarchar(%d)", maxsize)
 }
 
-// Returns auto_increment
+// AutoIncrStr Returns auto_increment
 func (d SqlServerDialect) AutoIncrStr() string {
 	return "identity(0,1)"
 }
 
-// Empty string removes autoincrement columns from the INSERT statements.
+// AutoIncrBindValue Empty string removes autoincrement columns from the INSERT statements.
 func (d SqlServerDialect) AutoIncrBindValue() string {
 	return ""
 }
 
-func (d SqlServerDialect) AutoIncrInsertSuffix(col *ColumnMap) string {
+func (d SqlServerDialect) AutoIncrInsertSuffix(_ *ColumnMap) string {
 	return ""
 }
 
@@ -96,12 +96,12 @@ func (d SqlServerDialect) TruncateClause() string {
 	return "truncate table"
 }
 
-// Returns "?"
-func (d SqlServerDialect) BindVar(i int) string {
+// BindVar Returns "?"
+func (d SqlServerDialect) BindVar(_ int) string {
 	return "?"
 }
 
-func (d SqlServerDialect) InsertAutoIncr(exec SqlExecutor, insertSql string, params ...interface{}) (int64, error) {
+func (d SqlServerDialect) InsertAutoIncr(exec SqlExecutor, insertSql string, params ...any) (int64, error) {
 	return standardInsertAutoIncr(exec, insertSql, params...)
 }
 
@@ -124,20 +124,20 @@ func (d SqlServerDialect) IfSchemaNotExists(command, schema string) string {
 }
 
 func (d SqlServerDialect) IfTableExists(command, schema, table string) string {
-	var schema_clause string
+	var schemaClause string
 	if strings.TrimSpace(schema) != "" {
-		schema_clause = fmt.Sprintf("%s.", d.QuoteField(schema))
+		schemaClause = fmt.Sprintf("%s.", d.QuoteField(schema))
 	}
-	s := fmt.Sprintf("if object_id('%s%s') is not null %s", schema_clause, d.QuoteField(table), command)
+	s := fmt.Sprintf("if object_id('%s%s') is not null %s", schemaClause, d.QuoteField(table), command)
 	return s
 }
 
 func (d SqlServerDialect) IfTableNotExists(command, schema, table string) string {
-	var schema_clause string
+	var schemaClause string
 	if strings.TrimSpace(schema) != "" {
-		schema_clause = fmt.Sprintf("%s.", schema)
+		schemaClause = fmt.Sprintf("%s.", schema)
 	}
-	s := fmt.Sprintf("if object_id('%s%s') is null %s", schema_clause, table, command)
+	s := fmt.Sprintf("if object_id('%s%s') is null %s", schemaClause, table, command)
 	return s
 }
 

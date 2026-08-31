@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -22,7 +23,7 @@ type OracleString struct {
 }
 
 // Scan implements the Scanner interface.
-func (os *OracleString) Scan(value interface{}) error {
+func (os *OracleString) Scan(value any) error {
 	if value == nil {
 		os.String, os.Valid = "", false
 		return nil
@@ -32,7 +33,7 @@ func (os *OracleString) Scan(value interface{}) error {
 }
 
 // Value implements the driver Valuer interface.
-func (os OracleString) Value() (driver.Value, error) {
+func (os *OracleString) Value() (driver.Value, error) {
 	if !os.Valid || os.String == "" {
 		return nil, nil
 	}
@@ -57,11 +58,10 @@ type legacySqlTyper interface {
 type dummyField struct{}
 
 // Scan implements the Scanner interface.
-func (nt *dummyField) Scan(value interface{}) error {
+func (nt *dummyField) Scan(_ any) error {
 	return nil
 }
 
-var zeroVal reflect.Value
 var versFieldConst = "[gorp_ver_field]"
 
 // The TypeConverter interface provides a way to map a value of one
@@ -71,7 +71,7 @@ var versFieldConst = "[gorp_ver_field]"
 // or serialize a struct member as a JSON blob.
 type TypeConverter interface {
 	// ToDb converts val to another type. Called before INSERT/UPDATE operations
-	ToDb(val interface{}) (interface{}, error)
+	ToDb(val any) (any, error)
 
 	// FromDb returns a CustomScanner appropriate for this type. This will be used
 	// to hold values returned from SELECT queries.
@@ -80,7 +80,7 @@ type TypeConverter interface {
 	// function appropriate for the Go type you wish to convert the db value to
 	//
 	// If bool==false, then no custom scanner will be used for this field.
-	FromDb(target interface{}) (CustomScanner, bool)
+	FromDb(target any) (CustomScanner, bool)
 }
 
 // SqlExecutor exposes gorp operations that can be run from Pre/Post
@@ -91,21 +91,21 @@ type TypeConverter interface {
 // information.
 type SqlExecutor interface {
 	WithContext(ctx context.Context) SqlExecutor
-	Get(i interface{}, keys ...interface{}) (interface{}, error)
-	Insert(list ...interface{}) error
-	Update(list ...interface{}) (int64, error)
-	Delete(list ...interface{}) (int64, error)
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Select(i interface{}, query string, args ...interface{}) ([]interface{}, error)
-	SelectInt(query string, args ...interface{}) (int64, error)
-	SelectNullInt(query string, args ...interface{}) (sql.NullInt64, error)
-	SelectFloat(query string, args ...interface{}) (float64, error)
-	SelectNullFloat(query string, args ...interface{}) (sql.NullFloat64, error)
-	SelectStr(query string, args ...interface{}) (string, error)
-	SelectNullStr(query string, args ...interface{}) (sql.NullString, error)
-	SelectOne(holder interface{}, query string, args ...interface{}) error
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Get(i any, keys ...any) (any, error)
+	Insert(list ...any) error
+	Update(list ...any) (int64, error)
+	Delete(list ...any) (int64, error)
+	Exec(query string, args ...any) (sql.Result, error)
+	Select(i any, query string, args ...any) ([]any, error)
+	SelectInt(query string, args ...any) (int64, error)
+	SelectNullInt(query string, args ...any) (sql.NullInt64, error)
+	SelectFloat(query string, args ...any) (float64, error)
+	SelectNullFloat(query string, args ...any) (sql.NullFloat64, error)
+	SelectStr(query string, args ...any) (string, error)
+	SelectNullStr(query string, args ...any) (sql.NullString, error)
+	SelectOne(holder any, query string, args ...any) error
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 }
 
 // DynamicTable allows the users of gorp to dynamically
@@ -120,13 +120,13 @@ type DynamicTable interface {
 // interface.
 var _, _ SqlExecutor = &DbMap{}, &Transaction{}
 
-func argValue(a interface{}) interface{} {
+func argValue(a any) any {
 	v, ok := a.(driver.Valuer)
 	if !ok {
 		return a
 	}
 	vV := reflect.ValueOf(v)
-	if vV.Kind() == reflect.Ptr && vV.IsNil() {
+	if vV.Kind() == reflect.Pointer && vV.IsNil() {
 		return nil
 	}
 	ret, err := v.Value()
@@ -136,8 +136,8 @@ func argValue(a interface{}) interface{} {
 	return ret
 }
 
-func argsString(args ...interface{}) string {
-	var margs string
+func argsString(args ...any) string {
+	var margs strings.Builder
 	for i, a := range args {
 		v := argValue(a)
 		switch v.(type) {
@@ -146,17 +146,17 @@ func argsString(args ...interface{}) string {
 		default:
 			v = fmt.Sprintf("%v", v)
 		}
-		margs += fmt.Sprintf("%d:%s", i+1, v)
+		margs.WriteString(fmt.Sprintf("%d:%s", i+1, v))
 		if i+1 < len(args) {
-			margs += " "
+			margs.WriteString(" ")
 		}
 	}
-	return margs
+	return margs.String()
 }
 
 // Calls the Exec function on the executor, but attempts to expand any eligible named
 // query arguments first.
-func maybeExpandNamedQueryAndExec(e SqlExecutor, query string, args ...interface{}) (sql.Result, error) {
+func maybeExpandNamedQueryAndExec(e SqlExecutor, query string, args ...any) (sql.Result, error) {
 	dbMap := extractDbMap(e)
 
 	if len(args) == 1 {
@@ -179,14 +179,14 @@ func extractDbMap(e SqlExecutor) *DbMap {
 // executor exposes the sql.DB and sql.Tx functions so that it can be used
 // on internal functions that need to be agnostic to the underlying object.
 type executor interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
+	Exec(query string, args ...any) (sql.Result, error)
 	Prepare(query string) (*sql.Stmt, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryRow(query string, args ...any) *sql.Row
+	Query(query string, args ...any) (*sql.Rows, error)
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
-	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
 func extractExecutorAndContext(e SqlExecutor) (executor, context.Context) {
@@ -204,12 +204,12 @@ func extractExecutorAndContext(e SqlExecutor) (executor, context.Context) {
 // dialect-dependent bindvars and instantiates the corresponding slice of
 // parameters by extracting data from the map / struct.
 // If not, returns the input values unchanged.
-func maybeExpandNamedQuery(m *DbMap, query string, args []interface{}) (string, []interface{}) {
+func maybeExpandNamedQuery(m *DbMap, query string, args []any) (string, []any) {
 	var (
 		arg    = args[0]
 		argval = reflect.ValueOf(arg)
 	)
-	if argval.Kind() == reflect.Ptr {
+	if argval.Kind() == reflect.Pointer {
 		argval = argval.Elem()
 	}
 
@@ -239,10 +239,10 @@ var keyRegexp = regexp.MustCompile(`:[[:word:]]+`)
 // single arg of Kind Struct or Map[string].  It returns the query with the
 // dialect's placeholders, and a slice of args ready for positional insertion
 // into the query.
-func expandNamedQuery(m *DbMap, query string, keyGetter func(key string) reflect.Value) (string, []interface{}) {
+func expandNamedQuery(m *DbMap, query string, keyGetter func(key string) reflect.Value) (string, []any) {
 	var (
 		n    int
-		args []interface{}
+		args []any
 	)
 	return keyRegexp.ReplaceAllStringFunc(query, func(key string) string {
 		val := keyGetter(key[1:])
@@ -270,7 +270,7 @@ func columnToFieldIndex(m *DbMap, t reflect.Type, name string, cols []string) ([
 	// Loop over column names and find field in i to bind to
 	// based on column name. all returned columns must match
 	// a field in the i struct
-	missingColNames := []string{}
+	var missingColNames []string
 	for x := range cols {
 		colName := strings.ToLower(cols[x])
 		field, found := t.FieldByNameFunc(func(fieldName string) bool {
@@ -307,36 +307,12 @@ func columnToFieldIndex(m *DbMap, t reflect.Type, name string, cols []string) ([
 	return colToFieldIndex, nil
 }
 
-func fieldByName(val reflect.Value, fieldName string) *reflect.Value {
-	// try to find field by exact match
-	f := val.FieldByName(fieldName)
-
-	if f != zeroVal {
-		return &f
-	}
-
-	// try to find by case insensitive match - only the Postgres driver
-	// seems to require this - in the case where columns are aliased in the sql
-	fieldNameL := strings.ToLower(fieldName)
-	fieldCount := val.NumField()
-	t := val.Type()
-	for i := 0; i < fieldCount; i++ {
-		sf := t.Field(i)
-		if strings.ToLower(sf.Name) == fieldNameL {
-			f := val.Field(i)
-			return &f
-		}
-	}
-
-	return nil
-}
-
 // toSliceType returns the element type of the given object, if the object is a
 // "*[]*Element" or "*[]Element". If not, returns nil.
 // err is returned if the user was trying to pass a pointer-to-slice but failed.
-func toSliceType(i interface{}) (reflect.Type, error) {
+func toSliceType(i any) (reflect.Type, error) {
 	t := reflect.TypeOf(i)
-	if t.Kind() != reflect.Ptr {
+	if t.Kind() != reflect.Pointer {
 		// If it's a slice, return a more helpful error message
 		if t.Kind() == reflect.Slice {
 			return nil, fmt.Errorf("gorp: cannot SELECT into a non-pointer slice: %v", t)
@@ -349,11 +325,11 @@ func toSliceType(i interface{}) (reflect.Type, error) {
 	return t.Elem(), nil
 }
 
-func toType(i interface{}) (reflect.Type, error) {
+func toType(i any) (reflect.Type, error) {
 	t := reflect.TypeOf(i)
 
 	// If a Pointer to a type, follow
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 
@@ -368,7 +344,7 @@ type foundTable struct {
 	dynName *string
 }
 
-func tableFor(m *DbMap, t reflect.Type, i interface{}) (*foundTable, error) {
+func tableFor(m *DbMap, t reflect.Type, i any) (*foundTable, error) {
 	if dyn, isDynamic := i.(DynamicTable); isDynamic {
 		tableName := dyn.TableName()
 		table, err := m.DynamicTableFor(tableName, true)
@@ -387,8 +363,8 @@ func tableFor(m *DbMap, t reflect.Type, i interface{}) (*foundTable, error) {
 	return &foundTable{table: table}, nil
 }
 
-func get(m *DbMap, exec SqlExecutor, i interface{},
-	keys ...interface{}) (interface{}, error) {
+func get(m *DbMap, exec SqlExecutor, i any,
+	keys ...any) (any, error) {
 
 	t, err := toType(i)
 	if err != nil {
@@ -409,7 +385,7 @@ func get(m *DbMap, exec SqlExecutor, i interface{},
 		retDyn.SetTableName(*foundTable.dynName)
 	}
 
-	dest := make([]interface{}, len(plan.argFields))
+	dest := make([]any, len(plan.argFields))
 
 	conv := m.TypeConverter
 	custScan := make([]CustomScanner, 0)
@@ -430,7 +406,7 @@ func get(m *DbMap, exec SqlExecutor, i interface{},
 	row := exec.QueryRow(plan.query, keys...)
 	err = row.Scan(dest...)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			err = nil
 		}
 		return nil, err
@@ -453,7 +429,7 @@ func get(m *DbMap, exec SqlExecutor, i interface{},
 	return v.Interface(), nil
 }
 
-func delete(m *DbMap, exec SqlExecutor, list ...interface{}) (int64, error) {
+func internalDelete(m *DbMap, exec SqlExecutor, list ...any) (int64, error) {
 	count := int64(0)
 	for _, ptr := range list {
 		table, elem, err := m.tableForPointer(ptr, true)
@@ -501,7 +477,7 @@ func delete(m *DbMap, exec SqlExecutor, list ...interface{}) (int64, error) {
 	return count, nil
 }
 
-func update(m *DbMap, exec SqlExecutor, colFilter ColumnFilter, list ...interface{}) (int64, error) {
+func update(m *DbMap, exec SqlExecutor, colFilter ColumnFilter, list ...any) (int64, error) {
 	count := int64(0)
 	for _, ptr := range list {
 		table, elem, err := m.tableForPointer(ptr, true)
@@ -553,7 +529,7 @@ func update(m *DbMap, exec SqlExecutor, colFilter ColumnFilter, list ...interfac
 	return count, nil
 }
 
-func insert(m *DbMap, exec SqlExecutor, list ...interface{}) error {
+func insert(m *DbMap, exec SqlExecutor, list ...any) error {
 	for _, ptr := range list {
 		table, elem, err := m.tableForPointer(ptr, false)
 		if err != nil {
@@ -623,7 +599,7 @@ func insert(m *DbMap, exec SqlExecutor, list ...interface{}) error {
 	return nil
 }
 
-func exec(e SqlExecutor, query string, args ...interface{}) (sql.Result, error) {
+func exec(e SqlExecutor, query string, args ...any) (sql.Result, error) {
 	executor, ctx := extractExecutorAndContext(e)
 
 	if ctx != nil {
@@ -643,7 +619,7 @@ func prepare(e SqlExecutor, query string) (*sql.Stmt, error) {
 	return executor.Prepare(query)
 }
 
-func queryRow(e SqlExecutor, query string, args ...interface{}) *sql.Row {
+func queryRow(e SqlExecutor, query string, args ...any) *sql.Row {
 	executor, ctx := extractExecutorAndContext(e)
 
 	if ctx != nil {
@@ -653,7 +629,7 @@ func queryRow(e SqlExecutor, query string, args ...interface{}) *sql.Row {
 	return executor.QueryRow(query, args...)
 }
 
-func query(e SqlExecutor, query string, args ...interface{}) (*sql.Rows, error) {
+func query(e SqlExecutor, query string, args ...any) (*sql.Rows, error) {
 	executor, ctx := extractExecutorAndContext(e)
 
 	if ctx != nil {

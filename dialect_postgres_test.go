@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 //go:build !integration
-// +build !integration
 
 package gorp_test
 
@@ -38,7 +37,7 @@ func TestPostgresDialect(t *testing.T) {
 	o.Group("ToSqlType", func() {
 		tests := []struct {
 			name     string
-			value    interface{}
+			value    any
 			maxSize  int
 			autoIncr bool
 			expected string
@@ -49,7 +48,7 @@ func TestPostgresDialect(t *testing.T) {
 			{"int16", int16(1), 0, false, "integer"},
 			{"uint16", uint16(1), 0, false, "integer"},
 			{"int32", int32(1), 0, false, "integer"},
-			{"int (treated as int32)", int(1), 0, false, "integer"},
+			{"int (treated as int32)", 1, 0, false, "integer"},
 			{"uint32", uint32(1), 0, false, "integer"},
 			{"uint (treated as uint32)", uint(1), 0, false, "integer"},
 			{"int64", int64(1), 0, false, "bigint"},

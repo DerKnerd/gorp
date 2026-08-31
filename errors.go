@@ -5,10 +5,11 @@
 package gorp
 
 import (
+	"errors"
 	"fmt"
 )
 
-// A non-fatal error, when a select query returns columns that do not exist
+// NoFieldInTypeError A non-fatal error, when a select query returns columns that do not exist
 // as fields in the struct it is being mapped to
 // TODO: discuss wether this needs an error. encoding/json silently ignores missing fields
 type NoFieldInTypeError struct {
@@ -20,10 +21,11 @@ func (err *NoFieldInTypeError) Error() string {
 	return fmt.Sprintf("gorp: no fields %+v in type %s", err.MissingColNames, err.TypeName)
 }
 
-// returns true if the error is non-fatal (ie, we shouldn't immediately return)
+// NonFatalError returns true if the error is non-fatal (ie, we shouldn't immediately return)
 func NonFatalError(err error) bool {
-	switch err.(type) {
-	case *NoFieldInTypeError:
+	var noFieldInTypeError *NoFieldInTypeError
+	switch {
+	case errors.As(err, &noFieldInTypeError):
 		return true
 	default:
 		return false

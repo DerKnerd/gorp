@@ -6,6 +6,7 @@ package gorp
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 )
@@ -13,10 +14,10 @@ import (
 // SelectInt executes the given query, which should be a SELECT statement for a single
 // integer column, and returns the value of the first row returned.  If no rows are
 // found, zero is returned.
-func SelectInt(e SqlExecutor, query string, args ...interface{}) (int64, error) {
+func SelectInt(e SqlExecutor, query string, args ...any) (int64, error) {
 	var h int64
 	err := selectVal(e, &h, query, args...)
-	if err != nil && err != sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return 0, err
 	}
 	return h, nil
@@ -25,10 +26,10 @@ func SelectInt(e SqlExecutor, query string, args ...interface{}) (int64, error) 
 // SelectNullInt executes the given query, which should be a SELECT statement for a single
 // integer column, and returns the value of the first row returned.  If no rows are
 // found, the empty sql.NullInt64 value is returned.
-func SelectNullInt(e SqlExecutor, query string, args ...interface{}) (sql.NullInt64, error) {
+func SelectNullInt(e SqlExecutor, query string, args ...any) (sql.NullInt64, error) {
 	var h sql.NullInt64
 	err := selectVal(e, &h, query, args...)
-	if err != nil && err != sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return h, err
 	}
 	return h, nil
@@ -37,10 +38,10 @@ func SelectNullInt(e SqlExecutor, query string, args ...interface{}) (sql.NullIn
 // SelectFloat executes the given query, which should be a SELECT statement for a single
 // float column, and returns the value of the first row returned. If no rows are
 // found, zero is returned.
-func SelectFloat(e SqlExecutor, query string, args ...interface{}) (float64, error) {
+func SelectFloat(e SqlExecutor, query string, args ...any) (float64, error) {
 	var h float64
 	err := selectVal(e, &h, query, args...)
-	if err != nil && err != sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return 0, err
 	}
 	return h, nil
@@ -49,10 +50,10 @@ func SelectFloat(e SqlExecutor, query string, args ...interface{}) (float64, err
 // SelectNullFloat executes the given query, which should be a SELECT statement for a single
 // float column, and returns the value of the first row returned. If no rows are
 // found, the empty sql.NullInt64 value is returned.
-func SelectNullFloat(e SqlExecutor, query string, args ...interface{}) (sql.NullFloat64, error) {
+func SelectNullFloat(e SqlExecutor, query string, args ...any) (sql.NullFloat64, error) {
 	var h sql.NullFloat64
 	err := selectVal(e, &h, query, args...)
-	if err != nil && err != sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return h, err
 	}
 	return h, nil
@@ -61,10 +62,10 @@ func SelectNullFloat(e SqlExecutor, query string, args ...interface{}) (sql.Null
 // SelectStr executes the given query, which should be a SELECT statement for a single
 // char/varchar column, and returns the value of the first row returned.  If no rows are
 // found, an empty string is returned.
-func SelectStr(e SqlExecutor, query string, args ...interface{}) (string, error) {
+func SelectStr(e SqlExecutor, query string, args ...any) (string, error) {
 	var h string
 	err := selectVal(e, &h, query, args...)
-	if err != nil && err != sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return "", err
 	}
 	return h, nil
@@ -74,10 +75,10 @@ func SelectStr(e SqlExecutor, query string, args ...interface{}) (string, error)
 // statement for a single char/varchar column, and returns the value
 // of the first row returned.  If no rows are found, the empty
 // sql.NullString is returned.
-func SelectNullStr(e SqlExecutor, query string, args ...interface{}) (sql.NullString, error) {
+func SelectNullStr(e SqlExecutor, query string, args ...any) (sql.NullString, error) {
 	var h sql.NullString
 	err := selectVal(e, &h, query, args...)
-	if err != nil && err != sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return h, err
 	}
 	return h, nil
@@ -86,13 +87,12 @@ func SelectNullStr(e SqlExecutor, query string, args ...interface{}) (sql.NullSt
 // SelectOne executes the given query (which should be a SELECT statement)
 // and binds the result to holder, which must be a pointer.
 //
-// If no row is found, an error (sql.ErrNoRows specifically) will be returned
+// # If no row is found, an error (sql.ErrNoRows specifically) will be returned
 //
 // If more than one row is found, an error will be returned.
-//
-func SelectOne(m *DbMap, e SqlExecutor, holder interface{}, query string, args ...interface{}) error {
+func SelectOne(m *DbMap, e SqlExecutor, holder any, query string, args ...any) error {
 	t := reflect.TypeOf(holder)
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	} else {
 		return fmt.Errorf("gorp: SelectOne holder must be a pointer, but got: %t", holder)
@@ -100,7 +100,7 @@ func SelectOne(m *DbMap, e SqlExecutor, holder interface{}, query string, args .
 
 	// Handle pointer to pointer
 	isptr := false
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		isptr = true
 		t = t.Elem()
 	}
@@ -146,7 +146,7 @@ func SelectOne(m *DbMap, e SqlExecutor, holder interface{}, query string, args .
 	return selectVal(e, holder, query, args...)
 }
 
-func selectVal(e SqlExecutor, holder interface{}, query string, args ...interface{}) error {
+func selectVal(e SqlExecutor, holder any, query string, args ...any) error {
 	if len(args) == 1 {
 		switch m := e.(type) {
 		case *DbMap:
@@ -171,8 +171,8 @@ func selectVal(e SqlExecutor, holder interface{}, query string, args ...interfac
 	return rows.Scan(holder)
 }
 
-func hookedselect(m *DbMap, exec SqlExecutor, i interface{}, query string,
-	args ...interface{}) ([]interface{}, error) {
+func hookedselect(m *DbMap, exec SqlExecutor, i any, query string,
+	args ...any) ([]any, error) {
 
 	var nonFatalErr error
 
@@ -208,8 +208,8 @@ func hookedselect(m *DbMap, exec SqlExecutor, i interface{}, query string,
 	return list, nonFatalErr
 }
 
-func rawselect(m *DbMap, exec SqlExecutor, i interface{}, query string,
-	args ...interface{}) ([]interface{}, error) {
+func rawselect(m *DbMap, exec SqlExecutor, i any, query string,
+	args ...any) ([]any, error) {
 	var (
 		appendToSlice   = false // Write results to i directly?
 		intoStruct      = true  // Selecting into a struct?
@@ -235,7 +235,7 @@ func rawselect(m *DbMap, exec SqlExecutor, i interface{}, query string,
 			}
 			return nil, err
 		}
-		pointerElements = t.Kind() == reflect.Ptr
+		pointerElements = t.Kind() == reflect.Pointer
 		if pointerElements {
 			t = t.Elem()
 		}
@@ -282,7 +282,7 @@ func rawselect(m *DbMap, exec SqlExecutor, i interface{}, query string,
 
 	// Add results to one of these two slices.
 	var (
-		list       = make([]interface{}, 0)
+		list       = make([]any, 0)
 		sliceValue = reflect.Indirect(reflect.ValueOf(i))
 	)
 
@@ -301,7 +301,7 @@ func rawselect(m *DbMap, exec SqlExecutor, i interface{}, query string,
 			v.Interface().(DynamicTable).SetTableName(tableName)
 		}
 
-		dest := make([]interface{}, len(cols))
+		dest := make([]any, len(cols))
 
 		custScan := make([]CustomScanner, 0)
 

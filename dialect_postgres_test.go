@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DerKnerd/gorp"
+	"github.com/DerKnerd/gorp/v4"
 	"github.com/poy/onpar"
 	"github.com/poy/onpar/expect"
 	"github.com/poy/onpar/matchers"

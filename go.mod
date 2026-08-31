@@ -1,4 +1,4 @@
-module github.com/DerKnerd/gorp
+module github.com/DerKnerd/gorp/v4
 
 go 1.27
 

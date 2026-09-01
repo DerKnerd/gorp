@@ -67,9 +67,23 @@ func (t *Transaction) Select(i any, query string, args ...any) ([]any, error) {
 	return hookedselect(t.dbmap, t, i, query, args...)
 }
 
-// SelectGeneric has the same behavior as DbMap.Select(), but runs in a transaction.
-func (t *Transaction) SelectGeneric[Type any](query string, args ...any) ([]any, error) {
-	return t.Select(new(Type), query, args...)
+// SelectType has the same behavior as DbMap.Select(), but runs in a transaction.
+func (t *Transaction) SelectType[Type any](query string, args ...any) ([]Type, error) {
+	if t.dbmap.ExpandSliceArgs {
+		expandSliceArgs(&query, args...)
+	}
+
+	selectResult, err := hookedselect(t.dbmap, t, new(Type), query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]Type, len(selectResult))
+	for i, r := range selectResult {
+		result[i] = *r.(*Type)
+	}
+
+	return result, nil
 }
 
 // Exec has the same behavior as DbMap.Exec(), but runs in a transaction.
@@ -149,8 +163,11 @@ func (t *Transaction) SelectOne(holder any, query string, args ...any) error {
 }
 
 // SelectOneGeneric is a convenience wrapper around the gorp.SelectOne function.
-func (t *Transaction) SelectOneGeneric[Type any](query string, args ...any) error {
-	return t.SelectOne(new(Type), query, args...)
+func (t *Transaction) SelectOneGeneric[Type any](query string, args ...any) (*Type, error) {
+	res := new(Type)
+	err := t.SelectOne(res, query, args...)
+
+	return res, err
 }
 
 // Commit commits the underlying database transaction.

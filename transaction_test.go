@@ -6,9 +6,14 @@
 
 package gorp_test
 
-import "testing"
+import (
+	"math/rand/v2"
+	"strconv"
+	"testing"
+)
 
 func TestTransaction_Select_expandSliceArgs(t *testing.T) {
+	table := "crazy_table" + strconv.Itoa(rand.Int())
 	tests := []struct {
 		description string
 		query       string
@@ -18,7 +23,7 @@ func TestTransaction_Select_expandSliceArgs(t *testing.T) {
 		{
 			description: "it should handle slice placeholders correctly",
 			query: `
-SELECT 1 FROM crazy_table
+SELECT 1 FROM  ` + table + `
 WHERE field1 = :Field1
 AND field2 IN (:FieldStringList)
 AND field3 IN (:FieldUIntList)
@@ -57,7 +62,7 @@ AND field14 IN (:FieldFloat64List)
 		{
 			description: "it should handle slice placeholders correctly with custom types",
 			query: `
-SELECT 1 FROM crazy_table
+SELECT 1 FROM  ` + table + `
 WHERE field2 IN (:FieldStringList)
 AND field12 IN (:FieldIntList)
 `,
@@ -90,7 +95,7 @@ AND field12 IN (:FieldIntList)
 
 	dbmap := newDBMap(t)
 	dbmap.ExpandSliceArgs = true
-	dbmap.AddTableWithName[dataFormat]("crazy_table")
+	dbmap.AddTableWithName[dataFormat](table)
 
 	err := dbmap.CreateTables()
 	if err != nil {
@@ -161,7 +166,8 @@ AND field12 IN (:FieldIntList)
 			}
 			defer tx.Rollback()
 
-			dummy, err := tx.SelectGeneric[int](tt.query, tt.args...)
+			var dummy []*int
+			_, err = tx.Select(&dummy, tt.query, tt.args...)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -176,6 +182,7 @@ want: %d`, len(dummy), tt.wantLen)
 }
 
 func TestTransaction_Exec_expandSliceArgs(t *testing.T) {
+	table := "crazy_table" + strconv.Itoa(rand.Int())
 	tests := []struct {
 		description string
 		query       string
@@ -185,7 +192,7 @@ func TestTransaction_Exec_expandSliceArgs(t *testing.T) {
 		{
 			description: "it should handle slice placeholders correctly",
 			query: `
-DELETE FROM crazy_table
+DELETE FROM  ` + table + `
 WHERE field1 = :Field1
 AND field2 IN (:FieldStringList)
 AND field3 IN (:FieldUIntList)
@@ -224,7 +231,7 @@ AND field14 IN (:FieldFloat64List)
 		{
 			description: "it should handle slice placeholders correctly with custom types",
 			query: `
-DELETE FROM crazy_table
+DELETE FROM  ` + table + `
 WHERE field2 IN (:FieldStringList)
 AND field12 IN (:FieldIntList)
 `,
@@ -257,7 +264,7 @@ AND field12 IN (:FieldIntList)
 
 	dbmap := newDBMap(t)
 	dbmap.ExpandSliceArgs = true
-	dbmap.AddTableWithName[dataFormat]("crazy_table")
+	dbmap.AddTableWithName[dataFormat](table)
 
 	err := dbmap.CreateTables()
 	if err != nil {

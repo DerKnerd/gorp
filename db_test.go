@@ -7,6 +7,8 @@
 package gorp_test
 
 import (
+	"math/rand"
+	"strconv"
 	"testing"
 )
 
@@ -23,6 +25,7 @@ func (c customType2) ToInt64Slice() []int64 {
 }
 
 func TestDbMap_Select_expandSliceArgs(t *testing.T) {
+	table := "crazy_table" + strconv.Itoa(rand.Int())
 	tests := []struct {
 		description string
 		query       string
@@ -32,7 +35,7 @@ func TestDbMap_Select_expandSliceArgs(t *testing.T) {
 		{
 			description: "it should handle slice placeholders correctly",
 			query: `
-SELECT 1 FROM crazy_table
+SELECT 1 FROM ` + table + `
 WHERE field1 = :Field1
 AND field2 IN (:FieldStringList)
 AND field3 IN (:FieldUIntList)
@@ -71,7 +74,7 @@ AND field14 IN (:FieldFloat64List)
 		{
 			description: "it should handle slice placeholders correctly with custom types",
 			query: `
-SELECT 1 FROM crazy_table
+SELECT 1 FROM ` + table + `
 WHERE field2 IN (:FieldStringList)
 AND field12 IN (:FieldIntList)
 `,
@@ -104,7 +107,7 @@ AND field12 IN (:FieldIntList)
 
 	dbmap := newDBMap(t)
 	dbmap.ExpandSliceArgs = true
-	dbmap.AddTableWithName[dataFormat]("crazy_table")
+	dbmap.AddTableWithName[dataFormat](table)
 
 	err := dbmap.CreateTables()
 	if err != nil {
@@ -176,7 +179,9 @@ AND field12 IN (:FieldIntList)
 			}
 
 			if len(dummy) != tt.wantLen {
-				t.Errorf("wrong result count\ngot:  %d\nwant: %d", len(dummy), tt.wantLen)
+				t.Errorf(`wrong result count
+got:  %d
+want: %d`, len(dummy), tt.wantLen)
 			}
 		})
 	}

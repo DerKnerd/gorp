@@ -634,7 +634,7 @@ func (m *DbMap) Get(i any, keys ...any) (any, error) {
 	return get(m, m, i, keys...)
 }
 
-// GetGeneric runs a SQL SELECT to fetch a single row from the table based on the
+// GetType runs a SQL SELECT to fetch a single row from the table based on the
 // primary key(s)
 //
 // i should be an empty value for the struct to load.  keys should be
@@ -649,8 +649,16 @@ func (m *DbMap) Get(i any, keys ...any) (any, error) {
 //
 // Returns an error if SetKeys has not been called on the TableMap
 // Panics if any interface in the list has not been registered with AddTable
-func (m *DbMap) GetGeneric[Type any](keys ...any) (any, error) {
-	return m.Get(new(Type), keys...)
+func (m *DbMap) GetType[Type any](keys ...any) (*Type, error) {
+	res, err := m.Get(*new(Type), keys...)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, nil
+	}
+
+	return res.(*Type), nil
 }
 
 // Select runs an arbitrary SQL query, binding the columns in the result
@@ -680,7 +688,7 @@ func (m *DbMap) Select(i any, query string, args ...any) ([]any, error) {
 	return hookedselect(m, m, i, query, args...)
 }
 
-// SelectGeneric runs an arbitrary SQL query, binding the columns in the result
+// SelectType runs an arbitrary SQL query, binding the columns in the result
 // to fields on the struct specified by i.  args represent the bind
 // parameters for the SQL statement.
 //
@@ -691,16 +699,22 @@ func (m *DbMap) Select(i any, query string, args ...any) ([]any, error) {
 //
 // The hook function PostGet() will be executed after the SELECT
 // statement if the interface defines them.
-//
-// Values are returned in one of two ways:
-// 1. If i is a struct or a pointer to a struct, returns a slice of pointers to
-// matching rows of type i.
-// 2. If i is a pointer to a slice, the results will be appended to that slice
-// and nil returned.
-//
-// i does NOT need to be registered with AddTable()
-func (m *DbMap) SelectGeneric[Type any](query string, args ...any) ([]any, error) {
-	return m.Select(new(Type), query, args...)
+func (m *DbMap) SelectType[Type any](query string, args ...any) ([]Type, error) {
+	if m.ExpandSliceArgs {
+		expandSliceArgs(&query, args...)
+	}
+
+	selectResult, err := hookedselect(m, m, new(Type), query, args...)
+	if selectResult == nil && err != nil {
+		return nil, err
+	}
+
+	result := make([]Type, len(selectResult))
+	for i, r := range selectResult {
+		result[i] = *r.(*Type)
+	}
+
+	return result, err
 }
 
 // Exec runs an arbitrary SQL statement.  args represent the bind parameters.
@@ -780,9 +794,12 @@ func (m *DbMap) SelectOne(holder any, query string, args ...any) error {
 	return SelectOne(m, m, holder, query, args...)
 }
 
-// SelectOneGeneric is a convenience wrapper around the gorp.SelectOne function
-func (m *DbMap) SelectOneGeneric[Type any](query string, args ...any) error {
-	return m.SelectOne(new(Type), query, args...)
+// SelectOneType is a convenience wrapper around the gorp.SelectOne function
+func (m *DbMap) SelectOneType[Type any](query string, args ...any) (*Type, error) {
+	result := new(Type)
+	err := m.SelectOne(result, query, args...)
+
+	return result, err
 }
 
 // Begin starts a gorp Transaction

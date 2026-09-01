@@ -208,8 +208,7 @@ func hookedselect(m *DbMap, exec SqlExecutor, i any, query string,
 	return list, nonFatalErr
 }
 
-func rawselect(m *DbMap, exec SqlExecutor, i any, query string,
-	args ...any) ([]any, error) {
+func rawselect(m *DbMap, exec SqlExecutor, i any, query string, args ...any) ([]any, error) {
 	var (
 		appendToSlice   = false // Write results to i directly?
 		intoStruct      = true  // Selecting into a struct?

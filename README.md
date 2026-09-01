@@ -2,7 +2,7 @@
 
 [![build status](https://github.com/DerKnerd/gorp/actions/workflows/go.yml/badge.svg)](https://github.com/DerKnerd/gorp/actions)
 [![issues](https://img.shields.io/github/issues/DerKnerd/gorp.svg)](https://github.com/DerKnerd/gorp/issues)
-[![Go Reference](https://pkg.go.dev/badge/imanuel.dev/gorp/v4.svg)](https://pkg.go.dev/imanuel.dev/gorp/v4)
+[![Go Reference](https://pkg.go.dev/badge/github.com/DerKnerd/gorp/v4.svg)](https://pkg.go.dev/github.com/DerKnerd/gorp/v4)
 
 ## Introduction
 
@@ -77,7 +77,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"imanuel.dev/gorp/v4"
+	"github.com/DerKnerd/gorp/v4"
 )
 
 func main() {

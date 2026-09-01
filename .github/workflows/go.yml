@@ -5,20 +5,22 @@ on:
     branches:
       - main
       - v3
+      - v4
   pull_request:
     branches:
       - main
       - v3
+      - v4
 
 jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
-    container: golang:1.18
+    container: golang:latest
 
     services:
       postgres:
-        image: postgres
+        image: postgres:latest
         env:
           POSTGRES_DB: gorptest
           POSTGRES_USER: gorptest
@@ -30,7 +32,7 @@ jobs:
           --health-retries 10
 
       mysql:
-        image: mysql:5.7
+        image: mysql:latest
         env:
           MYSQL_DATABASE: gorptest
           MYSQL_USER: gorptest
@@ -50,7 +52,7 @@ jobs:
 
   quick-tests:
     runs-on: ubuntu-latest
-    container: golang:1.18
+    container: golang:latest
     steps:
     - uses: actions/checkout@v3
 

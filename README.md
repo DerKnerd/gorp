@@ -1,40 +1,20 @@
 # Go Relational Persistence
 
-[![build status](https://github.com/go-gorp/gorp/actions/workflows/go.yml/badge.svg)](https://github.com/go-gorp/gorp/actions)
-[![issues](https://img.shields.io/github/issues/go-gorp/gorp.svg)](https://github.com/go-gorp/gorp/issues)
-[![Go Reference](https://pkg.go.dev/badge/github.com/go-gorp/gorp/v3.svg)](https://pkg.go.dev/github.com/go-gorp/gorp/v3)
-
-### Update 2016-11-13: Future versions
-
-As many of the maintainers have become busy with other projects,
-progress toward the ever-elusive v2 has slowed to the point that we're
-only occasionally making progress outside of merging pull requests.
-In the interest of continuing to release, I'd like to lean toward a
-more maintainable path forward.
-
-For the moment, I am releasing a v2 tag with the current feature set
-from master, as some of those features have been actively used and
-relied on by more than one project.  Our next goal is to continue
-cleaning up the code base with non-breaking changes as much as
-possible, but if/when a breaking change is needed, we'll just release
-new versions.  This allows us to continue development at whatever pace
-we're capable of, without delaying the release of features or refusing
-PRs.
+[![build status](https://github.com/DerKnerd/gorp/actions/workflows/go.yml/badge.svg)](https://github.com/DerKnerd/gorp/actions)
+[![issues](https://img.shields.io/github/issues/DerKnerd/gorp.svg)](https://github.com/DerKnerd/gorp/issues)
+[![Go Reference](https://pkg.go.dev/badge/imanuel.dev/gorp/v4.svg)](https://pkg.go.dev/imanuel.dev/gorp/v4)
 
 ## Introduction
 
-I hesitate to call gorp an ORM.  Go doesn't really have objects, at
-least not in the classic Smalltalk/Java sense.  There goes the "O".
-gorp doesn't know anything about the relationships between your
-structs (at least not yet).  So the "R" is questionable too (but I use
-it in the name because, well, it seemed more clever).
+I hesitate to call gorp an ORM. Go doesn't really have objects, at least not in the classic Smalltalk/Java sense. There
+goes the "O". gorp doesn't know anything about the relationships between your structs (at least not yet). So the "R" is
+questionable too (but I use it in the name because, well, it seemed more clever).
 
-The "M" is alive and well.  Given some Go structs and a database, gorp
-should remove a fair amount of boilerplate busy-work from your code.
+The "M" is alive and well. Given some Go structs and a database, gorp should remove a fair amount of boilerplate
+busy-work from your code.
 
-I hope that gorp saves you time, minimizes the drudgery of getting
-data in and out of your database, and helps your code focus on
-algorithms, not infrastructure.
+I hope that gorp saves you time, minimizes the drudgery of getting data in and out of your database, and helps your code
+focus on algorithms, not infrastructure.
 
 * Bind struct fields to table columns via API or tag
 * Support for embedded structs
@@ -43,65 +23,48 @@ algorithms, not infrastructure.
 * Pre/post insert/update/delete hooks
 * Automatically generate insert/update/delete statements for a struct
 * Automatic binding of auto increment PKs back to struct after insert
-* Delete by primary key(s)
-* Select by primary key(s)
+* Delete by primary key (s)
+* Select by primary key (s)
 * Optional trace sql logging
 * Bind arbitrary SQL queries to a struct
 * Bind slice to SELECT query results without type assertions
 * Use positional or named bind parameters in custom SELECT queries
-* Optional optimistic locking using a version column (for
-  update/deletes)
+* Optional optimistic locking using a version column (for update/deletes)
 
 ## Installation
 
-Use `go get` or your favorite vendoring tool, using whichever import
-path you'd like.
+Use `go get` or your favorite vendoring tool, using whichever import path you'd like.
 
 ## Versioning
 
-We use semantic version tags.  Feel free to import through `gopkg.in`
-(e.g. `gopkg.in/gorp.v2`) to get the latest tag for a major version,
-or check out the tag using your favorite vendoring tool.
+We use semantic version tags. Feel free to import through `gopkg.in`
+(e.g. `gopkg.in/DerKnerd/gorp.v4`) to get the latest tag for a major version, or check out the tag using your favorite
+vendoring tool.
 
-Development is not very active right now, but we have plans to
-restructure `gorp` as we continue to move toward a more extensible
-system.  Whenever a breaking change is needed, the major version will
-be bumped.
+Development is not very active right now, but we have plans to restructure `gorp` as we continue to move toward a more
+extensible system. Whenever a breaking change is needed, the major version will be bumped.
 
-The `master` branch is where all development is done, and breaking
-changes may happen from time to time.  That said, if you want to live
-on the bleeding edge and are comfortable updating your code when we
-make a breaking change, you may use `github.com/go-gorp/gorp` as your
-import path.
+The `main` branch is where all development is done, and breaking changes may happen from time to time. That said, if you
+want to live on the bleeding edge and are comfortable updating your code when we make a breaking change, you may use
+`github.com/DerKnerd/gorp` as your import path.
 
-Check the version tags to see what's available.  We'll make a good
-faith effort to add badges for new versions, but we make no
-guarantees.
+Check the version tags to see what's available. We'll make a good-faith effort to add badges for new versions, but we
+make no guarantees.
 
 ## Supported Go versions
 
-This package is guaranteed to be compatible with the latest 2 major
-versions of Go.
+This package is guaranteed to be compatible with the latest major version of Go.
 
-Any earlier versions are only supported on a best effort basis and can
-be dropped any time.  Go has a great compatibility promise. Upgrading
-your program to a newer version of Go should never really be a
-problem.
+Any earlier versions are only supported on the best effort basis and can be dropped any time. Go has a great
+compatibility promise. Upgrading your program to a newer version of Go should never really be a problem.
 
 ## Migration guide
 
 #### Pre-v2 to v2
-Automatic mapping of the version column used in optimistic locking has
-been removed as it could cause problems if the type was not int. The
-version column must now explicitly be set with
+
+Automatic mapping of the version column used in optimistic locking has been removed as it could cause problems if the
+type was not int. The version column must now explicitly be set with
 `tablemap.SetVersionCol()`.
-
-## Help/Support
-
-Use our [`gitter` channel](https://gitter.im/go-gorp/gorp).  We used
-to use IRC, but with most of us being pulled in many directions, we
-often need the email notifications from `gitter` to yell at us to sign
-in.
 
 ## Quickstart
 
@@ -109,117 +72,118 @@ in.
 package main
 
 import (
-    "database/sql"
-    "gopkg.in/gorp.v1"
-    _ "github.com/mattn/go-sqlite3"
-    "log"
-    "time"
+	"database/sql"
+	"log"
+	"time"
+
+	_ "github.com/mattn/go-sqlite3"
+	"imanuel.dev/gorp/v4"
 )
 
 func main() {
-    // initialize the DbMap
-    dbmap := initDb()
-    defer dbmap.Db.Close()
+	// initialize the DbMap
+	dbmap := initDb()
+	defer dbmap.Db.Close()
 
-    // delete any existing rows
-    err := dbmap.TruncateTables()
-    checkErr(err, "TruncateTables failed")
+	// delete any existing rows
+	err := dbmap.TruncateTables()
+	checkErr(err, "TruncateTables failed")
 
-    // create two posts
-    p1 := newPost("Go 1.1 released!", "Lorem ipsum lorem ipsum")
-    p2 := newPost("Go 1.2 released!", "Lorem ipsum lorem ipsum")
+	// create two posts
+	p1 := newPost("Go 1.1 released!", "Lorem ipsum lorem ipsum")
+	p2 := newPost("Go 1.2 released!", "Lorem ipsum lorem ipsum")
 
-    // insert rows - auto increment PKs will be set properly after the insert
-    err = dbmap.Insert(&p1, &p2)
-    checkErr(err, "Insert failed")
+	// insert rows - auto increment PKs will be set properly after the insert
+	err = dbmap.Insert(&p1, &p2)
+	checkErr(err, "Insert failed")
 
-    // use convenience SelectInt
-    count, err := dbmap.SelectInt("select count(*) from posts")
-    checkErr(err, "select count(*) failed")
-    log.Println("Rows after inserting:", count)
+	// use convenience SelectInt
+	count, err := dbmap.SelectInt("select count(*) from posts")
+	checkErr(err, "select count(*) failed")
+	log.Println("Rows after inserting:", count)
 
-    // update a row
-    p2.Title = "Go 1.2 is better than ever"
-    count, err = dbmap.Update(&p2)
-    checkErr(err, "Update failed")
-    log.Println("Rows updated:", count)
+	// update a row
+	p2.Title = "Go 1.2 is better than ever"
+	count, err = dbmap.Update(&p2)
+	checkErr(err, "Update failed")
+	log.Println("Rows updated:", count)
 
-    // fetch one row - note use of "post_id" instead of "Id" since column is aliased
-    //
-    // Postgres users should use $1 instead of ? placeholders
-    // See 'Known Issues' below
-    //
-    err = dbmap.SelectOne(&p2, "select * from posts where post_id=?", p2.Id)
-    checkErr(err, "SelectOne failed")
-    log.Println("p2 row:", p2)
+	// fetch one row - note use of "post_id" instead of "Id" since column is aliased
+	//
+	// Postgres users should use $1 instead of ? placeholders
+	// See 'Known Issues' below
+	//
+	err = dbmap.SelectOne(&p2, "select * from posts where post_id=?", p2.Id)
+	checkErr(err, "SelectOne failed")
+	log.Println("p2 row:", p2)
 
-    // fetch all rows
-    var posts []Post
-    _, err = dbmap.Select(&posts, "select * from posts order by post_id")
-    checkErr(err, "Select failed")
-    log.Println("All rows:")
-    for x, p := range posts {
-        log.Printf("    %d: %v\n", x, p)
-    }
+	// fetch all rows
+	var posts []Post
+	_, err = dbmap.Select(&posts, "select * from posts order by post_id")
+	checkErr(err, "Select failed")
+	log.Println("All rows:")
+	for x, p := range posts {
+		log.Printf("    %d: %v\n", x, p)
+	}
 
-    // delete row by PK
-    count, err = dbmap.Delete(&p1)
-    checkErr(err, "Delete failed")
-    log.Println("Rows deleted:", count)
+	// delete row by PK
+	count, err = dbmap.Delete(&p1)
+	checkErr(err, "Delete failed")
+	log.Println("Rows deleted:", count)
 
-    // delete row manually via Exec
-    _, err = dbmap.Exec("delete from posts where post_id=?", p2.Id)
-    checkErr(err, "Exec failed")
+	// delete row manually via Exec
+	_, err = dbmap.Exec("delete from posts where post_id=?", p2.Id)
+	checkErr(err, "Exec failed")
 
-    // confirm count is zero
-    count, err = dbmap.SelectInt("select count(*) from posts")
-    checkErr(err, "select count(*) failed")
-    log.Println("Row count - should be zero:", count)
+	// confirm count is zero
+	count, err = dbmap.SelectInt("select count(*) from posts")
+	checkErr(err, "select count(*) failed")
+	log.Println("Row count - should be zero:", count)
 
-    log.Println("Done!")
+	log.Println("Done!")
 }
 
 type Post struct {
-    // db tag lets you specify the column name if it differs from the struct field
-    Id      int64  `db:"post_id"`
-    Created int64
-    Title   string `db:",size:50"`               // Column size set to 50
-    Body    string `db:"article_body,size:1024"` // Set both column name and size
+	// db tag lets you specify the column name if it differs from the struct field
+	Id      int64 `db:"post_id"`
+	Created int64
+	Title   string `db:",size:50"`               // Column size set to 50
+	Body    string `db:"article_body,size:1024"` // Set both column name and size
 }
 
 func newPost(title, body string) Post {
-    return Post{
-        Created: time.Now().UnixNano(),
-        Title:   title,
-        Body:    body,
-    }
+	return Post{
+		Created: time.Now().UnixNano(),
+		Title:   title,
+		Body:    body,
+	}
 }
 
 func initDb() *gorp.DbMap {
-    // connect to db using standard Go database/sql API
-    // use whatever database/sql driver you wish
-    db, err := sql.Open("sqlite3", "/tmp/post_db.bin")
-    checkErr(err, "sql.Open failed")
+	// connect to db using standard Go database/sql API
+	// use whatever database/sql driver you wish
+	db, err := sql.Open("sqlite3", "/tmp/post_db.bin")
+	checkErr(err, "sql.Open failed")
 
-    // construct a gorp DbMap
-    dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	// construct a gorp DbMap
+	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-    // add a table, setting the table name to 'posts' and
-    // specifying that the Id property is an auto incrementing PK
-    dbmap.AddTableWithName(Post{}, "posts").SetKeys(true, "Id")
+	// add a table, setting the table name to 'posts' and
+	// specifying that the Id property is an auto incrementing PK
+	dbmap.AddTableWithName(Post{}, "posts").SetKeys(true, "Id")
 
-    // create the table. in a production system you'd generally
-    // use a migration tool, or create the tables via scripts
-    err = dbmap.CreateTablesIfNotExists()
-    checkErr(err, "Create tables failed")
+	// create the table. in a production system you'd generally
+	// use a migration tool, or create the tables via scripts
+	err = dbmap.CreateTablesIfNotExists()
+	checkErr(err, "Create tables failed")
 
-    return dbmap
+	return dbmap
 }
 
 func checkErr(err error, msg string) {
-    if err != nil {
-        log.Fatalln(msg, err)
-    }
+	if err != nil {
+		log.Fatalln(msg, err)
+	}
 }
 ```
 
@@ -230,20 +194,22 @@ func checkErr(err error, msg string) {
 First define some types:
 
 ```go
+package main
+
 type Invoice struct {
-    Id       int64
-    Created  int64
-    Updated  int64
-    Memo     string
-    PersonId int64
+	Id       int64
+	Created  int64
+	Updated  int64
+	Memo     string
+	PersonId int64
 }
 
 type Person struct {
-    Id      int64
-    Created int64
-    Updated int64
-    FName   string
-    LName   string
+	Id      int64
+	Created int64
+	Updated int64
+	FName   string
+	LName   string
 }
 
 // Example of using tags to alias fields to column names
@@ -262,16 +228,17 @@ type Person struct {
 // You can optionally declare the field to be a primary key and/or autoincrement
 //
 type Product struct {
-    Id         int64     `db:"product_id, primarykey, autoincrement"`
-    Price      int64     `db:"unit_price"`
-    IgnoreMe   string    `db:"-"`
+	Id       int64  `db:"product_id, primarykey, autoincrement"`
+	Price    int64  `db:"unit_price"`
+	IgnoreMe string `db:"-"`
 }
+
 ```
 
 Then create a mapper, typically you'd do this one time at app startup:
 
 ```go
-// connect to db using standard Go database/sql API
+    // connect to db using standard Go database/sql API
 // use whatever database/sql driver you wish
 db, err := sql.Open("mymysql", "tcp:localhost:3306*mydb/myuser/mypassword")
 
@@ -285,16 +252,17 @@ dbmap := &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 // SetKeys(true) means we have a auto increment primary key, which
 // will get automatically bound to your struct post-insert
 //
-t1 := dbmap.AddTableWithName(Invoice{}, "invoice_test").SetKeys(true, "Id")
-t2 := dbmap.AddTableWithName(Person{}, "person_test").SetKeys(true, "Id")
-t3 := dbmap.AddTableWithName(Product{}, "product_test").SetKeys(true, "Id")
+t1 := dbmap.AddTableWithName[Invoice]("invoice_test").SetKeys(true, "Id")
+t2 := dbmap.AddTableWithName[Person]("person_test").SetKeys(true, "Id")
+t3 := dbmap.AddTableWithName[Product]("product_test").SetKeys(true, "Id")
 ```
 
 ### Struct Embedding
 
-gorp supports embedding structs.  For example:
+gorp supports embedding structs. For example:
 
 ```go
+
 type Names struct {
     FirstName string
     LastName  string
@@ -307,18 +275,20 @@ type WithEmbeddedStruct struct {
 
 es := &WithEmbeddedStruct{-1, Names{FirstName: "Alice", LastName: "Smith"}}
 err := dbmap.Insert(es)
+
 ```
 
 See the `TestWithEmbeddedStruct` function in `gorp_test.go` for a full example.
 
 ### Create/Drop Tables ###
 
-Automatically create / drop registered tables.  This is useful for unit tests
-but is entirely optional.  You can of course use gorp with tables created manually,
-or with a separate migration tool (like [sql-migrate](https://github.com/rubenv/sql-migrate), [goose](https://bitbucket.org/liamstask/goose) or [migrate](https://github.com/mattes/migrate)).
+Automatically create / drop registered tables. This is useful for unit tests but is entirely optional. You can of course
+use gorp with tables created manually, or with a separate migration tool
+(like [sql-migrate](https://github.com/rubenv/sql-migrate), [goose](https://bitbucket.org/liamstask/goose)
+or [migrate](https://github.com/mattes/migrate)).
 
 ```go
-// create all registered tables
+  // create all registered tables
 dbmap.CreateTables()
 
 // same as above, but uses "if not exists" clause to skip tables that are
@@ -331,21 +301,20 @@ dbmap.DropTables()
 
 ### SQL Logging
 
-Optionally you can pass in a logger to trace all SQL statements.
-I recommend enabling this initially while you're getting the feel for what
-gorp is doing on your behalf.
+Optionally, you can pass in a logger to trace all SQL statements. I recommend enabling this initially while you're
+getting the feel for what gorp is doing on your behalf.
 
-Gorp defines a `GorpLogger` interface that Go's built in `log.Logger` satisfies.
-However, you can write your own `GorpLogger` implementation, or use a package such
-as `glog` if you want more control over how statements are logged.
+Gorp defines a `GorpLogger` interface that Go's built in `log.Logger` satisfies. However, you can write your own
+`GorpLogger` implementation, or use a package such as `glog` if you want more control over how statements are logged.
 
 ```go
-// Will log all SQL statements + args as they are run
+    // Will log all SQL statements + args as they are run
 // The first arg is a string prefix to prepend to all log messages
 dbmap.TraceOn("[gorp]", log.New(os.Stdout, "myapp:", log.Lmicroseconds))
 
 // Turn off tracing
 dbmap.TraceOff()
+
 ```
 
 ### Insert
@@ -375,7 +344,7 @@ count, err := dbmap.Update(inv1)
 
 ### Delete
 
-If you have primary key(s) defined for a struct, you can use the `Delete`
+If you have primary key (s) defined for a struct, you can use the `Delete`
 method to remove rows:
 
 ```go
@@ -384,8 +353,7 @@ count, err := dbmap.Delete(inv1)
 
 ### Select by Key
 
-Use the `Get` method to fetch a single row by primary key.  It returns
-nil if no row is found.
+Use the `Get` method to fetch a single row by primary key. It returns nil if no row is found.
 
 ```go
 // fetch Invoice with Id=99
@@ -397,13 +365,11 @@ inv := obj.(*Invoice)
 
 #### SELECT
 
-`Select()` and `SelectOne()` provide a simple way to bind arbitrary queries to a slice
-or a single struct.
+`Select()` and `SelectOne()` provide a simple way to bind arbitrary queries to a slice or a single struct.
 
 ```go
 // Select a slice - first return value is not needed when a slice pointer is passed to Select()
-var posts []Post
-_, err := dbmap.Select(&posts, "select * from post order by id")
+posts, err := dbmap.SelectType[Post]("select * from post order by id")
 
 // You can also use primitive types
 var ids []string
@@ -411,11 +377,10 @@ _, err := dbmap.Select(&ids, "select id from post")
 
 // Select a single row.
 // Returns an error if no row found, or if more than one row is found
-var post Post
-err := dbmap.SelectOne(&post, "select * from post where id=?", id)
+post, err := dbmap.SelectOneType[Post]("select * from post where id=?", id)
 ```
 
-Want to do joins?  Just write the SQL and the struct. gorp will bind them:
+Want to do joins? Just write the SQL and the struct. gorp will bind them:
 
 ```go
 // Define a type for your join
@@ -443,17 +408,16 @@ checkErr(err, "Insert failed")
 
 // Run your query
 query := "select i.Id InvoiceId, p.Id PersonId, i.Memo, p.FName " +
-	"from invoice_test i, person_test p " +
-	"where i.PersonId = p.Id"
+"from invoice_test i, person_test p " +
+"where i.PersonId = p.Id"
 
 // pass a slice to Select()
-var list []InvoicePersonView
-_, err := dbmap.Select(&list, query)
+list, err := dbmap.SelectType[InvoicePersonView](query)
 
 // this should test true
 expected := InvoicePersonView{inv1.Id, p1.Id, inv1.Memo, p1.FName}
 if reflect.DeepEqual(list[0], expected) {
-    fmt.Println("Woot! My join worked!")
+	fmt.Println("Woot! My join worked!")
 }
 ```
 
@@ -472,19 +436,18 @@ s, err := dbmap.SelectStr("select name from foo where blah=?", blahVal)
 
 #### Named bind parameters
 
-You may use a map or struct to bind parameters by name.  This is currently
-only supported in SELECT queries.
+You may use a map or struct to bind parameters by name. This is currently only supported in SELECT queries.
 
 ```go
-_, err := dbm.Select(&dest, "select * from Foo where name = :name and age = :age", map[string]any{
-  "name": "Rob",
-  "age": 31,
+dest, err := dbm.SelectType[TargetType]("select * from Foo where name = :name and age = :age", map[string]any{
+"name": "Rob",
+"age": 31,
 })
 ```
 
 #### UPDATE / DELETE
 
-You can execute raw SQL if you wish.  Particularly good for batch operations.
+You can execute raw SQL if you wish. Particularly good for batch operations.
 
 ```go
 res, err := dbmap.Exec("delete from invoice_test where PersonId=?", 10)
@@ -501,14 +464,14 @@ func InsertInv(dbmap *DbMap, inv *Invoice, per *Person) error {
     if err != nil {
         return err
     }
-
+    
     err = trans.Insert(per)
     checkErr(err, "Insert failed")
-
+    
     inv.PersonId = per.Id
     err = trans.Insert(inv)
     checkErr(err, "Insert failed")
-
+    
     // if the commit is successful, a nil error is returned
     return trans.Commit()
 }
@@ -566,11 +529,10 @@ Full list of hooks that you can implement:
 
 #### Note that this behaviour has changed in v2. See [Migration Guide](#migration-guide).
 
-gorp provides a simple optimistic locking feature, similar to Java's
-JPA, that will raise an error if you try to update/delete a row whose
-`version` column has a value different than the one in memory.  This
-provides a safe way to do "select then update" style operations
-without explicit read and write locks.
+gorp provides a simple optimistic locking feature, similar to Java's JPA, that will raise an error if you try to
+update/delete a row whose
+`version` column has a value different than the one in memory. This provides a safe way to do "select then update" style
+operations without explicit read and write locks.
 
 ```go
 // Version is an auto-incremented number, managed by gorp
@@ -585,7 +547,7 @@ type Person struct {
     Updated  int64
     FName    string
     LName    string
-
+    
     // automatically used as the Version col
     // use table.SetVersionCol("columnName") to map a different
     // struct field as the version field
@@ -593,23 +555,23 @@ type Person struct {
 }
 
 p1 := &Person{0, 0, 0, "Bob", "Smith", 0}
-err = dbmap.Insert(p1)  // Version is now 1
+err = dbmap.Insert(p1) // Version is now 1
 checkErr(err, "Insert failed")
 
-obj, err := dbmap.Get(Person{}, p1.Id)
-p2 := obj.(*Person)
+p2, err := dbmap.GetType[Person](p1.Id)
 p2.LName = "Edwards"
-_,err = dbmap.Update(p2)  // Version is now 2
+_, err = dbmap.Update(p2) // Version is now 2
 checkErr(err, "Update failed")
 
 p1.LName = "Howard"
 
 // Raises error because p1.Version == 1, which is out of date
 count, err := dbmap.Update(p1)
-_, ok := err.(gorp.OptimisticLockError)
+optimisticLockError := gorp.OptimisticLockError{}
+_, ok := errors.As(err, optimisticLockError)
 if ok {
     // should reach this statement
-
+    
     // in a real app you might reload the row and retry, or
     // you might propegate this to the user, depending on the desired
     // semantics
@@ -619,27 +581,26 @@ if ok {
     fmt.Printf("Unknown db err: %v\n", err)
 }
 ```
-### Adding INDEX(es) on column(s) beyond the primary key ###
 
-Indexes are frequently critical for performance. Here is how to add
-them to your tables.
+### Adding INDEX (es) on column (s) beyond the primary key ###
 
-NB: SqlServer and Oracle need testing and possible adjustment to the
-CreateIndexSuffix() and DropIndexSuffix() methods to make AddIndex()
+Indexes are frequently critical for performance. Here is how to add them to your tables.
+
+NB: SqlServer and Oracle need testing and possible adjustment to the CreateIndexSuffix () and DropIndexSuffix () methods
+to make AddIndex ()
 work for them.
 
-In the example below we put an index both on the Id field, and on the
-AcctId field.
+In the example below we put an index both on the Id field, and on the AcctId field.
 
-```
+```go
 type Account struct {
-	Id      int64
-	AcctId  string // e.g. this might be a long uuid for portability
+    Id      int64
+    AcctId  string // e.g. this might be a long uuid for portability
 }
 
 // indexType (the 2nd param to AddIndex call) is "Btree" or "Hash" for MySQL.
 // demonstrate adding a second index on AcctId, and constrain that field to have unique values.
-dbm.AddTable(iptab.Account{}).SetKeys(true, "Id").AddIndex("AcctIdIndex", "Btree", []string{"AcctId"}).SetUnique(true)
+dbm.AddTable[iptab.Account]().SetKeys(true, "Id").AddIndex("AcctIdIndex", "Btree", []string{"AcctId"}).SetUnique(true)
 
 err = dbm.CreateTablesIfNotExists()
 checkErr(err, "CreateTablesIfNotExists failed")
@@ -648,7 +609,9 @@ err = dbm.CreateIndex()
 checkErr(err, "CreateIndex failed")
 
 ```
-Check the effect of the CreateIndex() call in mysql:
+
+Check the effect of the CreateIndex () call in mysql:
+
 ```
 $ mysql
 
@@ -664,23 +627,20 @@ MariaDB [test]> show create table Account;
 
 ```
 
-
 ## Database Drivers
 
-gorp uses the Go 1 `database/sql` package.  A full list of compliant
-drivers is available here:
+gorp uses the Go 1 `database/sql` package. A full list of compliant drivers is available here:
 
-http://code.google.com/p/go-wiki/wiki/SQLDrivers
+[http://code.google.com/p/go-wiki/wiki/SQLDrivers](https://go.dev/wiki/SQLDrivers)
 
-Sadly, SQL databases differ on various issues. gorp provides a Dialect
-interface that should be implemented per database vendor.  Dialects
-are provided for:
+Sadly, SQL databases differ on various issues. gorp provides a Dialect interface that should be implemented per database
+vendor. Dialects are provided for:
 
 * MySQL
 * PostgreSQL
 * sqlite3
 
-Each of these three databases pass the test suite.  See `gorp_test.go`
+Each of these three databases pass the test suite. See `gorp_test.go`
 for example DSNs for these three databases.
 
 Support is also provided for:
@@ -689,9 +649,9 @@ Support is also provided for:
 * SQL Server (contributed by @qrawl) - use driver:
   github.com/denisenkom/go-mssqldb
 
-Note that these databases are not covered by CI and I (@coopernurse)
-have no good way to test them locally.  So please try them and send
-patches as needed, but expect a bit more unpredicability.
+Note that these databases are not covered by CI and I (@DerKnerd)
+have no good way to test them locally. So please try them and send patches as needed, but expect a bit more
+unpredicability.
 
 ## Sqlite3 Extensions
 
@@ -699,23 +659,22 @@ In order to use sqlite3 extensions you need to first register a custom driver:
 
 ```go
 import (
-	"database/sql"
+    "database/sql"
 
-	// use whatever database/sql driver you wish
-	sqlite "github.com/mattn/go-sqlite3"
+    // use whatever database/sql driver you wish
+    sqlite "github.com/mattn/go-sqlite3"
 )
 
 func customDriver() (*sql.DB, error) {
+    // create custom driver with extensions defined
+    sql.Register("sqlite3-custom", &sqlite.SQLiteDriver{
+        Extensions: []string{
+            "mod_spatialite",
+        },
+    })
 
-	// create custom driver with extensions defined
-	sql.Register("sqlite3-custom", &sqlite.SQLiteDriver{
-		Extensions: []string{
-			"mod_spatialite",
-		},
-	})
-
-	// now you can then connect using the 'sqlite3-custom' driver instead of 'sqlite3'
-	return sql.Open("sqlite3-custom", "/tmp/post_db.bin")
+    // now you can then connect using the 'sqlite3-custom' driver instead of 'sqlite3'
+    return sql.Open("sqlite3-custom", "/tmp/post_db.bin")
 }
 ```
 
@@ -723,59 +682,52 @@ func customDriver() (*sql.DB, error) {
 
 ### SQL placeholder portability
 
-Different databases use different strings to indicate variable
-placeholders in prepared SQL statements.  Unlike some database
-abstraction layers (such as JDBC), Go's `database/sql` does not
-standardize this.
+Different databases use different strings to indicate variable placeholders in prepared SQL statements. Unlike some
+database abstraction layers (such as JDBC), Go's `database/sql` does not standardize this.
 
 SQL generated by gorp in the `Insert`, `Update`, `Delete`, and `Get`
-methods delegates to a Dialect implementation for each database, and
-will generate portable SQL.
+methods delegates to a Dialect implementation for each database, and will generate portable SQL.
 
-Raw SQL strings passed to `Exec`, `Select`, `SelectOne`, `SelectInt`,
-etc will not be parsed.  Consequently you may have portability issues
-if you write a query like this:
+Raw SQL strings passed to `Exec`, `Select`, `SelectOne`, `SelectInt`, etc will not be parsed. Consequently you may have
+portability issues if you write a query like this:
 
 ```go 
-// works on MySQL and Sqlite3, but not with Postgresql err :=
-dbmap.SelectOne(&val, "select * from foo where id = ?", 30)
+// works on MySQL and Sqlite3, but not with Postgresql
+val, err := dbmap.SelectOneType[TargetType]("select * from foo where id = ?", 30)
 ```
 
-In `Select` and `SelectOne` you can use named parameters to work
-around this.  The following is portable:
+In `Select` and `SelectOne` you can use named parameters to work around this. The following is portable:
 
 ```go 
-err := dbmap.SelectOne(&val, "select * from foo where id = :id",
-map[string]any { "id": 30})
+val, err := dbmap.SelectOneType[TargetType]("select * from foo where id = :id", map[string]any {
+    "id": 30,
+})
 ```
 
 Additionally, when using Postgres as your database, you should utilize
-`$1` instead of `?` placeholders as utilizing `?` placeholders when
-querying Postgres will result in `pq: operator does not exist`
-errors. Alternatively, use `dbMap.Dialect.BindVar(varIdx)` to get the
-proper variable binding for your dialect.
+`$1` instead of `?` placeholders as utilizing `?` placeholders when querying Postgres will result in
+`pq: operator does not exist`
+errors. Alternatively, use `dbMap.Dialect.BindVar(varIdx)` to get the proper variable binding for your dialect.
 
 ### time.Time and time zones
 
 gorp will pass `time.Time` fields through to the `database/sql`
-driver, but note that the behavior of this type varies across database
-drivers.
+driver, but note that the behavior of this type varies across database drivers.
 
-MySQL users should be especially cautious.  See:
+MySQL users should be especially cautious. See:
 https://github.com/ziutek/mymysql/pull/77
 
 To avoid any potential issues with timezone/DST, consider:
 
 - Using an integer field for time data and storing UNIX time.
 - Using a custom time type that implements some SQL types:
-  - [`"database/sql".Scanner`](https://golang.org/pkg/database/sql/#Scanner)
-  - [`"database/sql/driver".Valuer`](https://golang.org/pkg/database/sql/driver/#Valuer)
+    - [`"database/sql".Scanner`](https://golang.org/pkg/database/sql/#Scanner)
+    - [`"database/sql/driver".Valuer`](https://golang.org/pkg/database/sql/driver/#Valuer)
 
 ## Running the tests
 
-The included tests may be run against MySQL, Postgresql, or sqlite3.
-You must set two environment variables so the test code knows which
-driver to use, and how to connect to your database.
+The included tests may be run against MySQL, PostgreSQL, or sqlite3. You must set two environment variables so the test
+code knows which driver to use and how to connect to your database.
 
 ```sh
 # MySQL example:
@@ -791,19 +743,16 @@ go test -bench="Bench" -benchtime 10
 
 Valid `GORP_TEST_DIALECT` values are: "mysql"(for mymysql),
 "gomysql"(for go-sql-driver), "postgres", "sqlite" See the
-`test_all.sh` script for examples of all 3 databases.  This is the
-script I run locally to test the library.
+`test_all.sh` script for examples of all 3 databases. This is the script I run locally to test the library.
 
 ## Performance
 
-gorp uses reflection to construct SQL queries and bind parameters.
-See the BenchmarkNativeCrud vs BenchmarkGorpCrud in gorp_test.go for a
-simple perf test.  On my MacBook Pro gorp is about 2-3% slower than
-hand written SQL.
-
+gorp uses reflection to construct SQL queries and bind parameters. See the BenchmarkNativeCrud vs BenchmarkGorpCrud in
+gorp_test.go for a simple perf test.
 
 ## Contributors
 
+* Imanuel Ulbricht - @DerKnerd
 * matthias-margush - column aliasing via tags
 * Rob Figueiredo - @robfig
 * Quinn Slack - @sqs

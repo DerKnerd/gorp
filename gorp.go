@@ -363,9 +363,7 @@ func tableFor(m *DbMap, t reflect.Type, i any) (*foundTable, error) {
 	return &foundTable{table: table}, nil
 }
 
-func get(m *DbMap, exec SqlExecutor, i any,
-	keys ...any) (any, error) {
-
+func get(m *DbMap, exec SqlExecutor, i any, keys ...any) (any, error) {
 	t, err := toType(i)
 	if err != nil {
 		return nil, err
@@ -477,7 +475,7 @@ func internalDelete(m *DbMap, exec SqlExecutor, list ...any) (int64, error) {
 	return count, nil
 }
 
-func update(m *DbMap, exec SqlExecutor, colFilter ColumnFilter, list ...any) (int64, error) {
+func internalUpdate(m *DbMap, exec SqlExecutor, colFilter ColumnFilter, list ...any) (int64, error) {
 	count := int64(0)
 	for _, ptr := range list {
 		table, elem, err := m.tableForPointer(ptr, true)
@@ -529,7 +527,7 @@ func update(m *DbMap, exec SqlExecutor, colFilter ColumnFilter, list ...any) (in
 	return count, nil
 }
 
-func insert(m *DbMap, exec SqlExecutor, list ...any) error {
+func internalInsert(m *DbMap, exec SqlExecutor, list ...any) error {
 	for _, ptr := range list {
 		table, elem, err := m.tableForPointer(ptr, false)
 		if err != nil {

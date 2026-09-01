@@ -568,7 +568,7 @@ func (m *DbMap) TruncateTables() error {
 //
 // Panics if any interface in the list has not been registered with AddTable
 func (m *DbMap) Insert(list ...any) error {
-	return insert(m, m, list...)
+	return internalInsert(m, m, list...)
 }
 
 // Update runs a SQL UPDATE statement for each element in list.  List
@@ -582,7 +582,7 @@ func (m *DbMap) Insert(list ...any) error {
 // Returns an error if SetKeys has not been called on the TableMap
 // Panics if any interface in the list has not been registered with AddTable
 func (m *DbMap) Update(list ...any) (int64, error) {
-	return update(m, m, nil, list...)
+	return internalUpdate(m, m, nil, list...)
 }
 
 // UpdateColumns runs a SQL UPDATE statement for each element in list.  List
@@ -598,7 +598,7 @@ func (m *DbMap) Update(list ...any) (int64, error) {
 // Returns an error if SetKeys has not been called on the TableMap
 // Panics if any interface in the list has not been registered with AddTable
 func (m *DbMap) UpdateColumns(filter ColumnFilter, list ...any) (int64, error) {
-	return update(m, m, filter, list...)
+	return internalUpdate(m, m, filter, list...)
 }
 
 // Delete runs a SQL DELETE statement for each element in list.  List
@@ -685,7 +685,7 @@ func (m *DbMap) Select(i any, query string, args ...any) ([]any, error) {
 		expandSliceArgs(&query, args...)
 	}
 
-	return hookedselect(m, m, i, query, args...)
+	return hookedSelect(m, m, i, query, args...)
 }
 
 // SelectType runs an arbitrary SQL query, binding the columns in the result
@@ -704,7 +704,7 @@ func (m *DbMap) SelectType[Type any](query string, args ...any) ([]Type, error) 
 		expandSliceArgs(&query, args...)
 	}
 
-	selectResult, err := hookedselect(m, m, new(Type), query, args...)
+	selectResult, err := hookedSelect(m, m, new(Type), query, args...)
 	if selectResult == nil && err != nil {
 		return nil, err
 	}

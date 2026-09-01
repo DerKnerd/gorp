@@ -108,7 +108,7 @@ func SelectOne(m *DbMap, e SqlExecutor, holder any, query string, args ...any) e
 	if t.Kind() == reflect.Struct {
 		var nonFatalErr error
 
-		list, err := hookedselect(m, e, holder, query, args...)
+		list, err := hookedSelect(m, e, holder, query, args...)
 		if err != nil {
 			if !NonFatalError(err) { // FIXME: double negative, rename NonFatalError to FatalError
 				return err
@@ -171,12 +171,10 @@ func selectVal(e SqlExecutor, holder any, query string, args ...any) error {
 	return rows.Scan(holder)
 }
 
-func hookedselect(m *DbMap, exec SqlExecutor, i any, query string,
-	args ...any) ([]any, error) {
-
+func hookedSelect(m *DbMap, exec SqlExecutor, i any, query string, args ...any) ([]any, error) {
 	var nonFatalErr error
 
-	list, err := rawselect(m, exec, i, query, args...)
+	list, err := rawSelect(m, exec, i, query, args...)
 	if err != nil {
 		if !NonFatalError(err) {
 			return nil, err
@@ -208,7 +206,7 @@ func hookedselect(m *DbMap, exec SqlExecutor, i any, query string,
 	return list, nonFatalErr
 }
 
-func rawselect(m *DbMap, exec SqlExecutor, i any, query string, args ...any) ([]any, error) {
+func rawSelect(m *DbMap, exec SqlExecutor, i any, query string, args ...any) ([]any, error) {
 	var (
 		appendToSlice   = false // Write results to i directly?
 		intoStruct      = true  // Selecting into a struct?

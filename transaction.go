@@ -30,17 +30,17 @@ func (t *Transaction) WithContext(ctx context.Context) SqlExecutor {
 
 // Insert has the same behavior as DbMap.Insert(), but runs in a transaction.
 func (t *Transaction) Insert(list ...any) error {
-	return insert(t.dbmap, t, list...)
+	return internalInsert(t.dbmap, t, list...)
 }
 
 // Update had the same behavior as DbMap.Update(), but runs in a transaction.
 func (t *Transaction) Update(list ...any) (int64, error) {
-	return update(t.dbmap, t, nil, list...)
+	return internalUpdate(t.dbmap, t, nil, list...)
 }
 
 // UpdateColumns had the same behavior as DbMap.UpdateColumns(), but runs in a transaction.
 func (t *Transaction) UpdateColumns(filter ColumnFilter, list ...any) (int64, error) {
-	return update(t.dbmap, t, filter, list...)
+	return internalUpdate(t.dbmap, t, filter, list...)
 }
 
 // Delete has the same behavior as DbMap.Delete(), but runs in a transaction.
@@ -64,7 +64,7 @@ func (t *Transaction) Select(i any, query string, args ...any) ([]any, error) {
 		expandSliceArgs(&query, args...)
 	}
 
-	return hookedselect(t.dbmap, t, i, query, args...)
+	return hookedSelect(t.dbmap, t, i, query, args...)
 }
 
 // SelectType has the same behavior as DbMap.Select(), but runs in a transaction.
@@ -73,7 +73,7 @@ func (t *Transaction) SelectType[Type any](query string, args ...any) ([]Type, e
 		expandSliceArgs(&query, args...)
 	}
 
-	selectResult, err := hookedselect(t.dbmap, t, new(Type), query, args...)
+	selectResult, err := hookedSelect(t.dbmap, t, new(Type), query, args...)
 	if err != nil {
 		return nil, err
 	}

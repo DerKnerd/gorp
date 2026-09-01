@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DerKnerd/gorp/v4"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/mattn/go-sqlite3"
+	"imanuel.dev/gorp/v4"
 )
 
 var (
